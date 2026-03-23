@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcéane Tools</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --ink:     #e8e4dc;
+    --paper:   #0a0a0a;
+    --accent:  #e03a32;
+    --muted:   #6a6560;
+    --border:  #222020;
+    --panel:   #111010;
+    --surface: #161414;
+    --dim:     #2a2828;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Raleway', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout principal ── */
+  .shell {
+    display: grid;
+    grid-template-rows: 52px 1fr 32px;
+    grid-template-columns: 220px 1fr;
+    grid-template-areas:
+      "header  header"
+      "sidebar content"
+      "footer  footer";
+    height: 100vh;
+  }
+
+  /* ── Header ── */
+  .shell-header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    background: rgba(8,8,8,0.96);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    gap: 20px;
+    z-index: 100;
+  }
+
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .header-logo img {
+    height: 26px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.06));
+  }
+  .header-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* Fil d'ariane */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    flex: 1;
+    min-width: 0;
+  }
+  .breadcrumb-home {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .breadcrumb-home:hover { color: var(--ink); }
+  .breadcrumb-chevron { opacity: 0.3; font-size: 9px; }
+  .breadcrumb-tool {
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Actions droite */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .hbtn {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+  }
+  .hbtn:hover { background: var(--surface); color: var(--ink); border-color: var(--dim); }
+  .hbtn.danger { color: var(--accent); border-color: rgba(224,58,50,0.25); }
+  .hbtn.danger:hover { background: rgba(224,58,50,0.08); border-color: var(--accent); }
+
+  /* ── Sidebar ── */
+  .shell-sidebar {
+    grid-area: sidebar;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-top {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sidebar-count {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--dim);
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+
+  /* Catégories et items */
+  .nav-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .nav-category {
+    padding: 10px 16px 4px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 14px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.12s;
+    text-decoration: none;
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.03);
+    border-left-color: var(--dim);
+  }
+  .nav-item.active {
+    background: rgba(224,58,50,0.07);
+    border-left-color: var(--accent);
+  }
+  .nav-item-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+  .nav-item-info { flex: 1; min-width: 0; }
+  .nav-item-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nav-item.active .nav-item-name { color: var(--accent); }
+  .nav-item-desc {
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+
+  /* Sidebar bottom : accueil */
+  .sidebar-home {
+    padding: 10px 8px;
+    border-top: 1px solid var(--border);
+  }
+  .home-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+  }
+  .home-btn:hover { background: var(--surface); color: var(--ink); border-color: var(--dim); }
+  .home-btn.active { background: rgba(255,255,255,0.04); color: var(--ink); border-color: var(--dim); }
+
+  /* ── Content ── */
+  .shell-content {
+    grid-area: content;
+    position: relative;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  /* Page d'accueil */
+  #home-view {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 48px 40px 40px;
+    gap: 40px;
+  }
+
+  .home-hero {
+    text-align: center;
+    max-width: 500px;
+  }
+  .home-logo {
+    height: 40px;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.06));
+  }
+  .home-title {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .home-sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tool-card:hover {
+    border-color: var(--accent);
+    background: rgba(224,58,50,0.04);
+  }
+  .tool-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tool-card-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .tool-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .tool-card-badge {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(224,58,50,0.12);
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .tool-card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .tool-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+  .tag {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--dim);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 1px;
+  }
+
+  .home-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    padding: 40px;
+    text-align: center;
+  }
+  .home-empty-icon { font-size: 36px; opacity: 0.3; }
+  .home-empty-text { font-size: 12px; letter-spacing: 0.5px; line-height: 1.7; }
+
+  /* iframe wrapper */
+  #tool-view {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+  #tool-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    background: var(--paper);
+  }
+
+  /* Loading overlay */
+  #loading {
+    position: absolute;
+    inset: 0;
+    background: var(--paper);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 10;
+  }
+  #loading.show { display: flex; }
+  .loading-spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── Footer ── */
+  .shell-footer {
+    grid-area: footer;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+  .footer-left {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .footer-right {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .footer-right a {
+    color: var(--dim);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-right a:hover { color: var(--muted); }
+
+  /* ── Modale ajout outil ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 28px;
+    width: 420px;
+    max-width: calc(100vw - 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .modal-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .modal-field { display: flex; flex-direction: column; gap: 6px; }
+  .modal-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .modal-input, .modal-select, .modal-textarea {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .modal-input:focus,
+  .modal-select:focus,
+  .modal-textarea:focus { border-color: var(--accent); }
+  .modal-select option { background: var(--panel); }
+  .modal-textarea { resize: vertical; min-height: 60px; }
+  .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .modal-btn {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-btn.ghost { background: transparent; color: var(--muted); }
+  .modal-btn.ghost:hover { background: var(--panel); color: var(--ink); }
+  .modal-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .modal-btn.primary:hover { background: #a82420; border-color: #a82420; }
+  .modal-hint {
+    font-size: 9px;
+    color: var(--muted);
+    line-height: 1.7;
+    letter-spacing: 0.3px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3838; }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: 52px 44px 1fr 32px;
+      grid-template-areas:
+        "header"
+        "sidebar"
+        "content"
+        "footer";
+    }
+    .shell-sidebar {
+      flex-direction: row;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .sidebar-top, .sidebar-home, .nav-category { display: none; }
+    .nav-list { display: flex; flex-direction: row; padding: 4px 8px; gap: 4px; }
+    .nav-item { flex-direction: column; gap: 2px; padding: 6px 10px; border-left: none; border-bottom: 2px solid transparent; min-width: 60px; }
+    .nav-item.active { border-left: none; border-bottom-color: var(--accent); }
+    .nav-item-desc { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── Header ── -->
+  <header class="shell-header">
+    <a class="header-logo" href="#" onclick="showHome(); return false;">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABtUAAAQnCAYAAACE4OPBAABccUlEQVR42uzdb8xd1X0n+i9RNL1ziUmVlLntZHp5ojQBRbcVE0ycBDGKsDEqSJWNKg2uzFRMGim2IqFKIQ4gXiEgJEgjpMiO1GaiXqzaI0VgRSIjjEFVEUkphkEzV5VJGvF4Mml7hyZqcX1npm+4L/Y5+LF57PX8OXvtf5+PFAEOnLXPb6+zzz7ru9dal7399tsBAAAAAAAALu49SgAAAAAAAACXJlQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgGAAADw/7dnBwIAAAAAgvytR1igNAIAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgBEyZY5aTlTWlgAAAABJRU5ErkJggg==" alt="Arcéane">
+    </a>
+    <div class="header-sep"></div>
+
+    <div class="breadcrumb">
+      <a class="breadcrumb-home" href="#" onclick="showHome(); return false;">Arcéane Tools</a>
+      <span class="breadcrumb-chevron" id="bc-chevron" style="display:none">›</span>
+      <span class="breadcrumb-tool" id="bc-tool"></span>
+    </div>
+
+    <div class="header-actions">
+      <button class="hbtn" id="btn-new-tab" style="display:none"
+              onclick="openInNewTab()" title="Ouvrir dans un nouvel onglet">
+        ↗ Nouvel onglet
+      </button>
+      <button class="hbtn danger" onclick="openAddModal()">
+        ＋ Ajouter un outil
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Sidebar ── -->
+  <aside class="shell-sidebar">
+    <div class="sidebar-top">
+      <span class="sidebar-title">Outils</span>
+      <span class="sidebar-count" id="sidebar-count">0</span>
+    </div>
+
+    <nav class="nav-list" id="nav-list">
+      <!-- Généré dynamiquement -->
+    </nav>
+
+    <div class="sidebar-home">
+      <button class="home-btn active" id="home-btn" onclick="showHome()">
+        ⌂ &nbsp;Accueil
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Content ── -->
+  <main class="shell-content">
+
+    <!-- Vue accueil -->
+    <div id="home-view">
+      <div class="home-hero">
+        <img class="home-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABtUAAAQnCAYAAACE4OPBAABccUlEQVR42uzdb8xd1X0n+i9RNL1ziUmVlLntZHp5ojQBRbcVE0ycBDGKsDEqSJWNKg2uzFRMGim2IqFKIQ4gXiEgJEgjpMiO1GaiXqzaI0VgRSIjjEFVEUkphkEzV5VJGvF4Mml7hyZqcX1npm+4L/Y5+LF57PX8OXvtf5+PFAEOnLXPb6+zzz7ru9dal7399tsBAAAAAAAALu49SgAAAAAAAACXJlQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAAACIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgAEyZY5aTlTWlgAAAABJRU5ErkJggg==" alt="Arcéane">
+        <h1 class="home-title">Arcéane Tools</h1>
+        <p class="home-sub">Suite d'outils M&amp;A — CO-JAK</p>
+      </div>
+
+      <div id="tools-grid" class="tools-grid">
+        <!-- Généré dynamiquement -->
+      </div>
+    </div>
+
+    <!-- Vue outil (iframe) -->
+    <div id="tool-view">
+      <iframe id="tool-frame" title="Outil Arcéane" sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals"></iframe>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="loading-spinner"></div>
+      <span class="loading-label">Chargement…</span>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="shell-footer">
+    <span class="footer-left">© CO-JAK — Arcéane Tools</span>
+    <span class="footer-right">
+      <a href="https://github.com/jstaquet/arceane_tools" target="_blank">github.com/jstaquet/arceane_tools</a>
+    </span>
+  </footer>
+
+</div>
+
+<!-- ── Modale ajout outil ── -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeAddModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Ajouter un outil</div>
+
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">URL de l'outil *</label>
+        <input class="modal-input" id="m-url" type="text" placeholder="caviardage/index.html" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Icône (emoji)</label>
+        <input class="modal-input" id="m-icon" type="text" placeholder="🔧" maxlength="4">
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">Nom affiché *</label>
+        <input class="modal-input" id="m-name" type="text" placeholder="Nom de l'outil" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Catégorie</label>
+        <input class="modal-input" id="m-category" type="text" placeholder="Documents" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Description</label>
+      <textarea class="modal-textarea" id="m-desc" placeholder="Description courte de l'outil…"></textarea>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Tags (séparés par des virgules)</label>
+      <input class="modal-input" id="m-tags" type="text" placeholder="pdf, document, sécurité" autocomplete="off">
+    </div>
+
+    <p class="modal-hint">
+      L'URL peut être relative (ex&nbsp;: <code>caviardage/index.html</code>) pour un fichier dans le même dépôt,
+      ou absolue (ex&nbsp;: <code>https://…</code>) pour un outil externe.
+      Les outils sont sauvegardés dans le <strong>localStorage</strong> du navigateur.
+    </p>
+
+    <div class="modal-actions">
+      <button class="modal-btn ghost" onclick="closeAddModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="saveNewTool()">Ajouter au menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constantes ────────────────────────────────────────────────────────
+const STORAGE_KEY = 'arceane_tools_v1';
+
+// Outils pré-chargés (toujours présents, non supprimables)
+const BUILT_IN_TOOLS = [
+  {
+    id:       'caviardage',
+    name:     'Caviardage',
+    url:      'caviardage/index.html',
+    icon:     '⬛',
+    category: 'Documents',
+    desc:     'Caviardage irréversible de PDF et images. Rasterisation totale.',
+    tags:     ['pdf', 'sécurité', 'document'],
+    builtin:  true
+  },
+  {
+    id:       'filigrane',
+    name:     'Filigrane PDF',
+    url:      'filigrane/index.html',
+    icon:     '🔏',
+    category: 'Documents',
+    desc:     'Ajout de filigrane texte sur PDF. Retour à la ligne automatique.',
+    tags:     ['pdf', 'watermark', 'document'],
+    builtin:  true
+  }
+];
+
+// ── State ──────────────────────────────────────────────────────────────
+let currentToolId = null;
+let currentToolUrl = null;
+
+// ── Persistance ────────────────────────────────────────────────────────
+function loadTools() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return saved;
+  } catch { return []; }
+}
+
+function saveTools(tools) {
+  const custom = tools.filter(t => !t.builtin);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
+}
+
+function getAllTools() {
+  const custom = loadTools();
+  // Merge : builtin first, then custom (dédoublonnage par id)
+  const ids = new Set(BUILT_IN_TOOLS.map(t => t.id));
+  const merged = [...BUILT_IN_TOOLS];
+  custom.forEach(t => { if (!ids.has(t.id)) merged.push(t); });
+  return merged;
+}
+
+// ── Rendu sidebar ──────────────────────────────────────────────────────
+function renderSidebar() {
+  const tools = getAllTools();
+  const navList = document.getElementById('nav-list');
+  document.getElementById('sidebar-count').textContent = tools.length;
+
+  // Grouper par catégorie
+  const categories = {};
+  tools.forEach(t => {
+    const cat = t.category || 'Outils';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(t);
+  });
+
+  navList.innerHTML = '';
+  Object.entries(categories).forEach(([cat, items]) => {
+    const catEl = document.createElement('div');
+    catEl.className = 'nav-category';
+    catEl.textContent = cat;
+    navList.appendChild(catEl);
+
+    items.forEach(tool => {
+      const el = document.createElement('div');
+      el.className = 'nav-item' + (tool.id === currentToolId ? ' active' : '');
+      el.dataset.id = tool.id;
+      el.innerHTML = `
+        <span class="nav-item-icon">${tool.icon || '🔧'}</span>
+        <div class="nav-item-info">
+          <div class="nav-item-name">${esc(tool.name)}</div>
+          ${tool.desc ? `<div class="nav-item-desc">${esc(tool.desc)}</div>` : ''}
+        </div>
+      `;
+      el.addEventListener('click', () => openTool(tool));
+      navList.appendChild(el);
+    });
+  });
+}
+
+// ── Rendu accueil ──────────────────────────────────────────────────────
+function renderHome() {
+  const tools = getAllTools();
+  const grid = document.getElementById('tools-grid');
+
+  if (tools.length === 0) {
+    grid.innerHTML = `
+      <div class="home-empty" style="grid-column:1/-1">
+        <span class="home-empty-icon">🧰</span>
+        <span class="home-empty-text">Aucun outil configuré.<br>Cliquez sur <strong>＋ Ajouter un outil</strong> pour commencer.</span>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = tools.map(tool => `
+    <div class="tool-card" onclick="openTool(${JSON.stringify(tool).replace(/"/g, '&quot;')})">
+      <div class="tool-card-top">
+        <span class="tool-card-icon">${tool.icon || '🔧'}</span>
+        <span class="tool-card-name">${esc(tool.name)}</span>
+        ${tool.builtin ? '<span class="tool-card-badge">Intégré</span>' : ''}
+      </div>
+      ${tool.desc ? `<div class="tool-card-desc">${esc(tool.desc)}</div>` : ''}
+      ${tool.tags?.length ? `
+        <div class="tool-card-tags">
+          ${tool.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+        </div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────
+function showHome() {
+  currentToolId  = null;
+  currentToolUrl = null;
+
+  document.getElementById('home-view').style.display = '';
+  document.getElementById('tool-view').style.display = 'none';
+  document.getElementById('loading').classList.remove('show');
+
+  document.getElementById('bc-chevron').style.display = 'none';
+  document.getElementById('bc-tool').textContent = '';
+  document.getElementById('btn-new-tab').style.display = 'none';
+
+  document.getElementById('home-btn').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+  // Reset iframe
+  const frame = document.getElementById('tool-frame');
+  frame.src = 'about:blank';
+}
+
+function openTool(tool) {
+  currentToolId  = tool.id;
+  currentToolUrl = tool.url;
+
+  // UI
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('tool-view').style.display = '';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('home-btn').classList.remove('active');
+
+  // Breadcrumb
+  document.getElementById('bc-chevron').style.display = '';
+  document.getElementById('bc-tool').textContent = tool.name;
+  document.getElementById('btn-new-tab').style.display = '';
+
+  // Active sidebar item
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === tool.id);
+  });
+
+  // Load iframe
+  const frame = document.getElementById('tool-frame');
+  frame.onload = () => {
+    document.getElementById('loading').classList.remove('show');
+  };
+  frame.src = tool.url;
+}
+
+function openInNewTab() {
+  if (currentToolUrl) window.open(currentToolUrl, '_blank');
+}
+
+// ── Modale ─────────────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('modal-backdrop').classList.add('open');
+  document.getElementById('m-url').focus();
+}
+
+function closeAddModal(e) {
+  if (!e || e.target === document.getElementById('modal-backdrop')) {
+    document.getElementById('modal-backdrop').classList.remove('open');
+    clearModal();
+  }
+}
+
+function clearModal() {
+  ['m-url','m-name','m-icon','m-category','m-desc','m-tags'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+function saveNewTool() {
+  const url  = document.getElementById('m-url').value.trim();
+  const name = document.getElementById('m-name').value.trim();
+  if (!url || !name) {
+    document.getElementById(url ? 'm-name' : 'm-url').style.borderColor = 'var(--accent)';
+    setTimeout(() => {
+      document.getElementById('m-url').style.borderColor = '';
+      document.getElementById('m-name').style.borderColor = '';
+    }, 1500);
+    return;
+  }
+
+  const tagsRaw = document.getElementById('m-tags').value;
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  const tool = {
+    id:       'custom_' + Date.now(),
+    name,
+    url,
+    icon:     document.getElementById('m-icon').value.trim() || '🔧',
+    category: document.getElementById('m-category').value.trim() || 'Outils',
+    desc:     document.getElementById('m-desc').value.trim(),
+    tags,
+    builtin:  false
+  };
+
+  const custom = loadTools();
+  custom.push(tool);
+  saveTools(custom);
+
+  closeAddModal();
+  clearModal();
+  renderSidebar();
+  renderHome();
+}
+
+// ── Raccourcis clavier ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAddModal();
+    if (currentToolId) showHome();
+  }
+});
+
+// ── Utilitaires ────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+renderSidebar();
+renderHome();
+
+// Ouvrir l'outil depuis l'URL hash (ex: shell.html#filigrane)
+const hash = location.hash.slice(1);
+if (hash) {
+  const tools = getAllTools();
+  const target = tools.find(t => t.id === hash || t.url.includes(hash));
+  if (target) openTool(target);
+}
+</script>
+
+</body>
+</html>
