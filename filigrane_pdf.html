@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filigrane PDF — CO-JAK / Arcéane</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --ink:         #e8e4dc;
+    --paper:       #0a0a0a;
+    --accent:      #e03a32;
+    --accent-glow: rgba(224,58,50,0.18);
+    --muted:       #6a6560;
+    --border:      #222020;
+    --panel:       #111010;
+    --surface:     #161414;
+    --green:       #2ecc71;
+    --green-glow:  rgba(46,204,113,0.12);
+    --blue:        #4a9eff;
+    --blue-glow:   rgba(74,158,255,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Raleway', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header (identique caviardage) ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    gap: 20px;
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .logo-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+  }
+
+  .logo-word {
+    font-family: 'Raleway', sans-serif;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+  }
+
+  .logo-badge {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(224,58,50,0.15);
+    padding: 3px 7px;
+    border-radius: 2px;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    font-family: 'Raleway', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    padding: 9px 18px;
+    border-radius: 2px;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface); color: var(--ink); }
+
+  .btn-danger {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-danger:hover { background: #a82420; }
+  .btn-danger:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  /* ── Drop Zone ── */
+  #dropzone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    gap: 24px;
+  }
+
+  .drop-frame {
+    width: 100%;
+    max-width: 560px;
+    border: 1.5px dashed var(--border);
+    border-radius: 4px;
+    padding: 60px 40px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .drop-frame:hover, .drop-frame.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .drop-frame.has-file {
+    border-color: var(--green);
+    border-style: solid;
+    background: var(--green-glow);
+  }
+
+  .drop-frame input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .drop-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 20px;
+    opacity: 0.25;
+  }
+
+  .drop-title {
+    font-family: 'Raleway', sans-serif;
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+
+  .drop-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .drop-note {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: var(--panel);
+    padding: 12px 20px;
+    border-radius: 2px;
+    max-width: 560px;
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  /* ── Editor ── */
+  #editor {
+    display: none;
+    flex: 1;
+    flex-direction: row;
+    height: calc(100vh - 68px);
+    overflow: hidden;
+  }
+
+  /* ── Sidebar gauche ── */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .field-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  /* Texte filigrane */
+  .wm-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 9px 12px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .wm-input:focus {
+    border-color: var(--accent);
+  }
+  .wm-input.small {
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    font-weight: 500;
+    text-align: left;
+  }
+
+  /* Sliders */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      var(--accent) 0%,
+      var(--accent) var(--pct, 20%),
+      #2a2828 var(--pct, 20%)
+    );
+    outline: none;
+    cursor: pointer;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1px #3a3838;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+  .slider-val {
+    font-family: 'Raleway', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 38px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Palette couleurs */
+  .color-row {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 26px; height: 26px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.12s, border-color 0.12s;
+    position: relative;
+  }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.active {
+    border-color: var(--ink);
+    transform: scale(1.1);
+  }
+  .color-swatch.active::after {
+    content: '✓';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+
+  /* Nom de sortie */
+  .sidebar-bottom {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tool-btn {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 2px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tool-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .tool-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 10px 14px;
+    justify-content: center;
+  }
+  .tool-btn.primary:hover { background: #a82420; border-color: #a82420; }
+  .tool-btn.primary:disabled { background: var(--border); border-color: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  /* Status */
+  .status-bar {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 2px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .status-bar.info  { display: flex; background: var(--blue-glow); border: 1px solid rgba(74,158,255,0.2); color: var(--blue); }
+  .status-bar.ok    { display: flex; background: var(--green-glow); border: 1px solid rgba(46,204,113,0.2); color: var(--green); }
+  .status-bar.error { display: flex; background: var(--accent-glow); border: 1px solid rgba(224,58,50,0.3); color: var(--accent); }
+
+  /* ── Zone centrale : prévisualisation ── */
+  .canvas-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  .toolbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-sep {
+    width: 1px; height: 24px;
+    background: var(--border);
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .zoom-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .canvas-scroll {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 30px;
+    background: #050505;
+  }
+
+  #preview-canvas {
+    display: block;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
+    max-width: 100%;
+  }
+
+  .preview-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    opacity: 0.4;
+    height: 300px;
+  }
+  .preview-placeholder-icon { font-size: 40px; }
+  .preview-placeholder-text {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* ── Panel info droite ── */
+  .right-panel {
+    width: 200px;
+    min-width: 200px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .right-panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .info-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 10px;
+  }
+
+  .info-item-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .info-item-value {
+    font-family: 'Raleway', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    word-break: break-all;
+  }
+
+  .info-note {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .info-note-box {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: rgba(224,58,50,0.06);
+    border: 1px solid rgba(224,58,50,0.15);
+    border-radius: 2px;
+    padding: 10px;
+    line-height: 1.7;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2828; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3838; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Raleway', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 10px 20px;
+    border-radius: 2px;
+    transition: transform 0.25s;
+    z-index: 500;
+    pointer-events: none;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Spinner ── */
+  .spinner {
+    width: 11px; height: 11px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .footer-text {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .footer-sep { color: var(--border); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .right-panel { display: none; }
+    .sidebar { width: 200px; min-width: 200px; }
+  }
+  @media (max-width: 620px) {
+    #editor { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--border); }
+    header { padding: 12px 16px; }
+    #dropzone { padding: 30px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header Arcéane partagé -->
+<script src="https://raw.githubusercontent.com/jstaquet/arceane_tools/main/arceane-header.js"></script>
+
+<!-- Header propre à l'outil -->
+<header>
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABtUAAAQnCAYAAACE4OPBAABccUlEQVR42uzdb8xd1X0n+i9RNL1ziUmVlLntZHp5ojQBRbcVE0ycBDGKsDEqSJWNKg2uzFRMGim2IqFKIQ4gXiEgJEgjpMiO1GaiXqzaI0VgRSIjjEFVEUkphkEzV5VJGvF4Mml7hyZqcX1npm+4L/Y5+LF57PX8OXvtf5+PFAEOnLXPb6+zzz7ru9dal7399tsBAAAAAAAALu49SgAAAAAAAACXJlQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAADw/7dnBwIAAAAAgvytR1igNAIAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgBEyZY5aTlTWlgAAAABJRU5ErkJggg=="
+       alt="Arcéane" style="height:52px;width:auto;display:block;filter:drop-shadow(0 0 8px rgba(255,255,255,0.08));">
+
+  <div class="logo-center">
+    <span class="logo-word">Filigrane PDF</span>
+    <span class="logo-badge">Watermark sécurisé</span>
+  </div>
+
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn btn-ghost" id="btn-reset" style="display:none">
+      ✕ Nouveau fichier
+    </button>
+    <button class="btn btn-danger" id="btn-generate-header" style="display:none" disabled>
+      ↓ Télécharger le PDF filigrané
+    </button>
+  </div>
+</header>
+
+<!-- ── Drop Zone ── -->
+<div id="dropzone">
+  <div class="drop-frame" id="drop-target">
+    <input type="file" id="file-input" accept=".pdf">
+    <svg class="drop-icon" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="4" width="34" height="44" rx="2" stroke="currentColor" stroke-width="2"/>
+      <path d="M32 4v12h12" stroke="currentColor" stroke-width="2"/>
+      <rect x="14" y="22" width="22" height="3" rx="1" fill="currentColor" opacity=".4"/>
+      <rect x="14" y="29" width="22" height="3" rx="1" fill="currentColor" opacity=".4"/>
+      <rect x="14" y="36" width="14" height="3" rx="1" fill="currentColor" opacity=".4"/>
+      <circle cx="42" cy="42" r="10" fill="#161414" stroke="currentColor" stroke-width="2"/>
+      <path d="M42 37v10M37 42h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div class="drop-title">Déposer un fichier PDF</div>
+    <div class="drop-sub">
+      PDF uniquement<br>
+      <span style="font-size:11px;color:var(--muted)">ou cliquer pour parcourir</span>
+    </div>
+  </div>
+  <div class="drop-note">
+    Traitement 100% local — aucun fichier transmis à un serveur.<br>
+    Le filigrane est appliqué sur toutes les pages du document.
+  </div>
+</div>
+
+<!-- ── Éditeur ── -->
+<div id="editor">
+
+  <!-- Sidebar gauche : paramètres -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span>Paramètres</span>
+    </div>
+
+    <!-- Texte -->
+    <div class="sidebar-section">
+      <div>
+        <div class="field-label">Texte du filigrane</div>
+        <input type="text" class="wm-input" id="wm-text"
+               value="CONFIDENTIEL" maxlength="100" spellcheck="false" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Opacité -->
+    <div class="sidebar-section">
+      <div>
+        <div class="field-label">Opacité</div>
+        <div class="slider-row">
+          <input type="range" id="opacity-range" min="5" max="60" value="15" step="1">
+          <span class="slider-val" id="opacity-val">15%</span>
+        </div>
+      </div>
+
+      <!-- Taille -->
+      <div>
+        <div class="field-label">Taille du texte</div>
+        <div class="slider-row">
+          <input type="range" id="size-range" min="20" max="120" value="60" step="5">
+          <span class="slider-val" id="size-val">60 pt</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Couleur -->
+    <div class="sidebar-section">
+      <div>
+        <div class="field-label">Couleur</div>
+        <div class="color-row">
+          <div class="color-swatch active" data-color="a0a0a0" style="background:#a0a0a0" title="Gris"></div>
+          <div class="color-swatch" data-color="cc2222" style="background:#cc2222" title="Rouge"></div>
+          <div class="color-swatch" data-color="3a80d2" style="background:#3a80d2" title="Bleu"></div>
+          <div class="color-swatch" data-color="27a060" style="background:#27a060" title="Vert"></div>
+          <div class="color-swatch" data-color="d08020" style="background:#d08020" title="Orange"></div>
+          <div class="color-swatch" data-color="8040b0" style="background:#8040b0" title="Violet"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nom de sortie + générer -->
+    <div class="sidebar-bottom">
+      <div>
+        <div class="field-label">Nom du fichier</div>
+        <input type="text" class="wm-input small" id="output-name"
+               value="document_filigrané" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="status-bar" id="status-bar">
+        <span class="spinner" id="status-spinner" style="display:none"></span>
+        <span id="status-text"></span>
+      </div>
+      <button class="tool-btn primary" id="btn-generate" disabled>
+        ↓ Générer et télécharger
+      </button>
+    </div>
+  </div>
+
+  <!-- Zone centrale : prévisualisation -->
+  <div class="canvas-area">
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <span style="font-family:'Raleway',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">Aperçu</span>
+      </div>
+      <div class="toolbar-sep"></div>
+      <div class="toolbar-group">
+        <button class="tool-btn" id="btn-zoom-out">−</button>
+        <span class="zoom-label" id="zoom-label">100%</span>
+        <button class="tool-btn" id="btn-zoom-in">+</button>
+        <button class="tool-btn" id="btn-zoom-fit">⊡ Ajuster</button>
+      </div>
+      <div class="toolbar-sep"></div>
+      <div class="toolbar-group" style="margin-left:auto">
+        <span id="page-nav-label" style="font-family:'Raleway',sans-serif;font-size:10px;font-weight:500;color:var(--muted)"></span>
+        <button class="tool-btn" id="btn-prev">‹ Préc.</button>
+        <button class="tool-btn" id="btn-next">Suiv. ›</button>
+        <button class="tool-btn" id="btn-refresh" title="Actualiser l'aperçu">↺ Actualiser</button>
+      </div>
+    </div>
+
+    <div class="canvas-scroll" id="canvas-scroll">
+      <div id="preview-placeholder" class="preview-placeholder">
+        <span class="preview-placeholder-icon">🖼️</span>
+        <span class="preview-placeholder-text">Aperçu de la première page</span>
+      </div>
+      <canvas id="preview-canvas" style="display:none"></canvas>
+    </div>
+  </div>
+
+  <!-- Panel droit : infos -->
+  <div class="right-panel">
+    <div class="right-panel-header">Informations</div>
+    <div class="info-list" id="info-list">
+      <div style="padding:16px;font-family:'Raleway',sans-serif;font-size:10px;color:var(--muted);letter-spacing:0.5px;line-height:1.8;">
+        Chargez un PDF pour voir les informations du document.
+      </div>
+    </div>
+    <div class="info-note">
+      <div class="info-note-box">
+        Traitement local uniquement.<br>
+        Texte long : retour à la ligne auto.<br>
+        Toutes pages traitées.<br>
+        Compatible A4, A3, Letter…
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  <span class="footer-text">© CO-JAK — Tous droits réservés</span>
+  <span class="footer-sep">|</span>
+  <span class="footer-text" style="font-weight:300;letter-spacing:0.8px;text-transform:none;">Outil de filigrane sécurisé — Arcéane</span>
+</footer>
+
+<!-- ── pdf.js worker ── -->
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────
+let pdfFile    = null;
+let pdfBytes   = null;
+let totalPages = 0;
+let currentPage = 0;
+let zoom       = 1.0;
+let selectedColor = 'a0a0a0';
+let previewRendering = false;
+
+// ── DOM ────────────────────────────────────────────────────────────────
+const dropzone       = document.getElementById('dropzone');
+const editor         = document.getElementById('editor');
+const dropTarget     = document.getElementById('drop-target');
+const fileInput      = document.getElementById('file-input');
+const wmText         = document.getElementById('wm-text');
+const opacityRange   = document.getElementById('opacity-range');
+const opacityVal     = document.getElementById('opacity-val');
+const sizeRange      = document.getElementById('size-range');
+const sizeVal        = document.getElementById('size-val');
+const outputName     = document.getElementById('output-name');
+const btnGenerate    = document.getElementById('btn-generate');
+const btnGenerateHdr = document.getElementById('btn-generate-header');
+const btnReset       = document.getElementById('btn-reset');
+const btnRefresh     = document.getElementById('btn-refresh');
+const statusBar      = document.getElementById('status-bar');
+const statusText     = document.getElementById('status-text');
+const statusSpinner  = document.getElementById('status-spinner');
+const previewCanvas  = document.getElementById('preview-canvas');
+const previewPlaceholder = document.getElementById('preview-placeholder');
+const pageNavLabel   = document.getElementById('page-nav-label');
+const zoomLabel      = document.getElementById('zoom-label');
+const infoList       = document.getElementById('info-list');
+const toast          = document.getElementById('toast');
+
+// ── Drag & drop ────────────────────────────────────────────────────────
+dropTarget.addEventListener('dragover',  e => { e.preventDefault(); dropTarget.classList.add('drag-over'); });
+dropTarget.addEventListener('dragleave', () => dropTarget.classList.remove('drag-over'));
+dropTarget.addEventListener('drop', e => {
+  e.preventDefault();
+  dropTarget.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') loadFile(f);
+  else showToast('Veuillez déposer un fichier PDF.');
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+// ── Load file ──────────────────────────────────────────────────────────
+async function loadFile(f) {
+  pdfFile  = f;
+  pdfBytes = await f.arrayBuffer();
+
+  // Get page count via pdf.js
+  const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice(0) });
+  const pdf = await loadingTask.promise;
+  totalPages = pdf.numPages;
+  currentPage = 0;
+
+  // Prefill output name
+  outputName.value = f.name.replace(/\.pdf$/i, '') + '_filigrané';
+
+  // Show editor
+  dropzone.style.display  = 'none';
+  editor.style.display    = 'flex';
+  btnReset.style.display  = '';
+  btnGenerateHdr.style.display = '';
+  btnGenerate.disabled    = false;
+  btnGenerateHdr.disabled = false;
+
+  updateInfoPanel(f, totalPages);
+  fitZoom();
+  renderPreview();
+}
+
+// ── Info panel ─────────────────────────────────────────────────────────
+function updateInfoPanel(f, pages) {
+  infoList.innerHTML = `
+    <div class="info-item">
+      <div class="info-item-label">Fichier</div>
+      <div class="info-item-value">${f.name}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-item-label">Taille</div>
+      <div class="info-item-value">${(f.size / 1024).toFixed(0)} Ko</div>
+    </div>
+    <div class="info-item">
+      <div class="info-item-label">Pages</div>
+      <div class="info-item-value">${pages}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-item-label">Filigrane</div>
+      <div class="info-item-value" id="info-wm-text">${wmText.value || '—'}</div>
+    </div>
+  `;
+}
+
+// ── Sliders ────────────────────────────────────────────────────────────
+function updateSlider(range, label, suffix) {
+  const pct = ((range.value - range.min) / (range.max - range.min)) * 100;
+  range.style.setProperty('--pct', pct + '%');
+  label.textContent = range.value + suffix;
+}
+opacityRange.addEventListener('input', () => { updateSlider(opacityRange, opacityVal, '%'); debouncedPreview(); });
+sizeRange.addEventListener('input',    () => { updateSlider(sizeRange, sizeVal, ' pt'); debouncedPreview(); });
+updateSlider(opacityRange, opacityVal, '%');
+updateSlider(sizeRange, sizeVal, ' pt');
+
+// ── Couleurs ───────────────────────────────────────────────────────────
+document.querySelectorAll('.color-swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    selectedColor = sw.dataset.color;
+    debouncedPreview();
+  });
+});
+
+// ── Texte live update ──────────────────────────────────────────────────
+wmText.addEventListener('input', () => {
+  const info = document.getElementById('info-wm-text');
+  if (info) info.textContent = wmText.value || '—';
+  debouncedPreview();
+});
+
+// ── Zoom ───────────────────────────────────────────────────────────────
+document.getElementById('btn-zoom-in').addEventListener('click',  () => { zoom = Math.min(zoom + 0.25, 3); renderPreview(); });
+document.getElementById('btn-zoom-out').addEventListener('click', () => { zoom = Math.max(zoom - 0.25, 0.25); renderPreview(); });
+document.getElementById('btn-zoom-fit').addEventListener('click', fitZoom);
+btnRefresh.addEventListener('click', renderPreview);
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  if (currentPage > 0) { currentPage--; renderPreview(); }
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (currentPage < totalPages - 1) { currentPage++; renderPreview(); }
+});
+
+function fitZoom() {
+  if (!pdfFile) return;
+  const scroll = document.getElementById('canvas-scroll');
+  const availW = scroll.clientWidth - 60;
+  zoom = Math.min(availW / 595, 1.5); // A4 width approx 595
+  zoom = Math.max(0.25, Math.round(zoom * 4) / 4);
+  renderPreview();
+}
+
+// ── Prévisualisation ───────────────────────────────────────────────────
+async function renderPreview() {
+  if (!pdfBytes || previewRendering) return;
+  previewRendering = true;
+
+  try {
+    // 1. Appliquer le filigrane en mémoire
+    const watBytes = await applyWatermark(pdfBytes.slice(0), wmText.value.trim() || ' ');
+
+    // 2. Rendu via pdf.js
+    const loadingTask = pdfjsLib.getDocument({ data: watBytes });
+    const pdf  = await loadingTask.promise;
+    const page = await pdf.getPage(currentPage + 1);
+
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = zoom;
+    const viewport = page.getViewport({ scale });
+
+    previewCanvas.width  = viewport.width;
+    previewCanvas.height = viewport.height;
+
+    await page.render({
+      canvasContext: previewCanvas.getContext('2d'),
+      viewport
+    }).promise;
+
+    previewCanvas.style.display = 'block';
+    previewPlaceholder.style.display = 'none';
+    zoomLabel.textContent = Math.round(zoom * 100) + '%';
+    pageNavLabel.textContent = `Page ${currentPage + 1} / ${totalPages}`;
+  } catch(e) {
+    console.error(e);
+  } finally {
+    previewRendering = false;
+  }
+}
+
+// Debounce pour ne pas déclencher à chaque frappe
+let previewTimer;
+function debouncedPreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(renderPreview, 350);
+}
+
+// ── Moteur filigrane (pdf-lib) ─────────────────────────────────────────
+async function applyWatermark(srcBytes, text) {
+  const { PDFDocument, rgb, degrees } = PDFLib;
+
+  const pdfDoc = await PDFDocument.load(srcBytes, { ignoreEncryption: true });
+  const pages  = pdfDoc.getPages();
+  const opacity  = parseInt(opacityRange.value) / 100;
+  const fontSize = parseInt(sizeRange.value);
+  const hex = selectedColor;
+  const r = parseInt(hex.slice(0,2),16)/255;
+  const g = parseInt(hex.slice(2,4),16)/255;
+  const b = parseInt(hex.slice(4,6),16)/255;
+
+  for (const page of pages) {
+    const { width, height } = page.getSize();
+    const diagonal     = Math.sqrt(width * width + height * height);
+    const maxLineWidth = diagonal * 0.78;
+    const charW        = fontSize * 0.55;
+    const charsPerLine = Math.max(1, Math.floor(maxLineWidth / charW));
+    const lines        = wrapText(text, charsPerLine);
+    const lineHeight   = fontSize * 1.35;
+    const totalH       = lines.length * lineHeight;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const estW = line.length * charW;
+      const yOff = (totalH / 2) - (i * lineHeight) - fontSize * 0.35;
+
+      page.drawText(line, {
+        x:       width / 2 - estW / 2,
+        y:       height / 2 + yOff,
+        size:    fontSize,
+        color:   rgb(r, g, b),
+        opacity: opacity,
+        rotate:  degrees(45),
+      });
+    }
+  }
+  return await pdfDoc.save();
+}
+
+// ── Word wrap ──────────────────────────────────────────────────────────
+function wrapText(text, charsPerLine) {
+  if (text.length <= charsPerLine) return [text];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word;
+    if (test.length <= charsPerLine) { current = test; }
+    else { if (current) lines.push(current); current = word; }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [text];
+}
+
+// ── Génération & téléchargement ────────────────────────────────────────
+async function generate() {
+  if (!pdfBytes) return;
+  const text = wmText.value.trim();
+  if (!text) { showToast('Veuillez saisir un texte de filigrane.'); return; }
+
+  btnGenerate.disabled    = true;
+  btnGenerateHdr.disabled = true;
+  setStatus('info', 'Génération en cours…', true);
+
+  try {
+    const outBytes = await applyWatermark(pdfBytes.slice(0), text);
+    const blob = new Blob([outBytes], { type: 'application/pdf' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = (outputName.value.trim() || 'document_filigrané') + '.pdf';
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('ok', `✓ Fichier téléchargé : ${a.download}`);
+    showToast('PDF filigrané généré avec succès.');
+  } catch(e) {
+    setStatus('error', 'Erreur : ' + e.message);
+    console.error(e);
+  } finally {
+    btnGenerate.disabled    = false;
+    btnGenerateHdr.disabled = false;
+  }
+}
+
+btnGenerate.addEventListener('click', generate);
+btnGenerateHdr.addEventListener('click', generate);
+
+// ── Reset ──────────────────────────────────────────────────────────────
+btnReset.addEventListener('click', () => {
+  pdfFile = null; pdfBytes = null;
+  totalPages = 0; currentPage = 0;
+  zoom = 1.0;
+  previewCanvas.style.display = 'none';
+  previewPlaceholder.style.display = 'flex';
+  dropzone.style.display   = 'flex';
+  editor.style.display     = 'none';
+  btnReset.style.display   = 'none';
+  btnGenerateHdr.style.display = 'none';
+  btnGenerate.disabled     = true;
+  btnGenerateHdr.disabled  = true;
+  fileInput.value = '';
+  statusBar.className = 'status-bar';
+});
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function setStatus(type, msg, spinner = false) {
+  statusBar.className = 'status-bar ' + type;
+  statusText.textContent = msg;
+  statusSpinner.style.display = spinner ? 'inline-block' : 'none';
+}
+
+let toastTimer;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+</script>
+
+</body>
+</html>
