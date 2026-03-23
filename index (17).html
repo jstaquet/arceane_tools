@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcéane Tools — CO-JAK</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --ink:     #e8e4dc;
+    --paper:   #0a0a0a;
+    --accent:  #e03a32;
+    --muted:   #6a6560;
+    --border:  #222020;
+    --panel:   #111010;
+    --surface: #161414;
+    --dim:     #2a2828;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Raleway', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    height: 56px;
+    background: rgba(8,8,8,0.97);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .header-logo img {
+    height: 28px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.06));
+  }
+  .header-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin: 0 16px;
+  }
+  .header-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 1;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .hbtn {
+    font-family: 'Raleway', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 13px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hbtn:hover { background: var(--surface); color: var(--ink); border-color: var(--dim); }
+  .hbtn.danger { color: var(--accent); border-color: rgba(224,58,50,0.25); }
+  .hbtn.danger:hover { background: rgba(224,58,50,0.08); border-color: var(--accent); }
+
+  /* ── Main ── */
+  main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 230px;
+    min-width: 230px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sidebar-count {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--dim);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  .nav-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .nav-category {
+    padding: 10px 16px 4px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    transition: all 0.12s;
+    color: inherit;
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.03);
+    border-left-color: var(--dim);
+  }
+  .nav-item-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+    width: 22px;
+    text-align: center;
+  }
+  .nav-item-info { flex: 1; min-width: 0; }
+  .nav-item-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nav-item-desc {
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .nav-item-arrow {
+    font-size: 10px;
+    color: var(--dim);
+    flex-shrink: 0;
+    transition: color 0.12s;
+  }
+  .nav-item:hover .nav-item-arrow { color: var(--muted); }
+
+  /* ── Content : grille des outils ── */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 40px 40px;
+    gap: 40px;
+    background: var(--paper);
+  }
+
+  .hero {
+    text-align: center;
+    max-width: 480px;
+  }
+  .hero-logo {
+    height: 38px;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.05));
+  }
+  .hero-title {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .hero-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 10px;
+    width: 100%;
+    max-width: 860px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 18px 16px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .tool-card:hover {
+    border-color: var(--accent);
+    background: rgba(224,58,50,0.04);
+  }
+  .tool-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tool-card-icon { font-size: 20px; flex-shrink: 0; }
+  .tool-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    flex: 1;
+  }
+  .tool-card-badge {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(224,58,50,0.1);
+    padding: 2px 6px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .tool-card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .tool-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+  .tag {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--dim);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 1px;
+  }
+  .tool-card-footer {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .tool-card-open {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .tool-card:hover .tool-card-open { opacity: 1; }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    padding: 48px 20px;
+    text-align: center;
+    grid-column: 1 / -1;
+  }
+  .empty-icon { font-size: 36px; opacity: 0.25; }
+  .empty-text { font-size: 12px; letter-spacing: 0.5px; line-height: 1.8; }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 0 24px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .footer-text {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .footer-link {
+    font-size: 9px;
+    color: var(--dim);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-link:hover { color: var(--muted); }
+
+  /* ── Modale ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 28px;
+    width: 440px;
+    max-width: calc(100vw - 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .modal-field { display: flex; flex-direction: column; gap: 6px; }
+  .modal-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .modal-input, .modal-textarea {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .modal-input:focus, .modal-textarea:focus { border-color: var(--accent); }
+  .modal-textarea { resize: vertical; min-height: 56px; }
+  .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .modal-btn {
+    font-family: 'Raleway', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-btn.ghost { background: transparent; color: var(--muted); }
+  .modal-btn.ghost:hover { background: var(--panel); color: var(--ink); }
+  .modal-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .modal-btn.primary:hover { background: #a82420; border-color: #a82420; }
+  .modal-hint {
+    font-size: 9px;
+    color: var(--muted);
+    line-height: 1.7;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .modal-hint code {
+    font-family: monospace;
+    color: var(--ink);
+    background: rgba(255,255,255,0.06);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  .modal-delete-zone {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-delete-label {
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .modal-btn.delete {
+    background: transparent;
+    border-color: rgba(224,58,50,0.3);
+    color: var(--accent);
+    font-size: 9px;
+    padding: 5px 10px;
+  }
+  .modal-btn.delete:hover { background: rgba(224,58,50,0.1); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3838; }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    .sidebar { display: none; }
+    .content { padding: 28px 16px; }
+    .tools-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <a class="header-logo" href="index.html">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABtUAAAQnCAYAAACE4OPBAABccUlEQVR42uzdb8xd1X0n+i9RNL1ziUmVlLntZHp5ojQBRbcVE0ycBDGKsDEqSJWNKg2uzFRMGim2IqFKIQ4gXiEgJEgjpMiO1GaiXqzaI0VgRSIjjEFVEUkphkEzV5VJGvF4Mml7hyZqcX1npm+4L/Y5+LF57PX8OXvtf5+PFAEOnLXPb6+zzz7ru9dal7399tsBAAAAAAAALu49SgAAAAAAAACXJlQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgGAAADw/7dnBwIAAAAAgvytR1igNAIAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAAACIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAAACIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAAACIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgBEyZY5aTlTWlgAAAABJRU5ErkJggg==" alt="Arcéane">
+  </a>
+  <div class="header-sep"></div>
+  <span class="header-title">Arcéane Tools</span>
+  <div class="header-actions">
+    <button class="hbtn danger" onclick="openAddModal()">＋ Ajouter un outil</button>
+  </div>
+</header>
+
+<!-- ── Layout ── -->
+<main>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-label">Outils</span>
+      <span class="sidebar-count" id="sidebar-count">0</span>
+    </div>
+    <nav class="nav-scroll" id="nav-list"></nav>
+  </aside>
+
+  <!-- Grille principale -->
+  <div class="content">
+    <div class="hero">
+      <img class="hero-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABtUAAAQnCAYAAACE4OPBAABccUlEQVR42uzdb8xd1X0n+i9RNL1ziUmVlLntZHp5ojQBRbcVE0ycBDGKsDEqSJWNKg2uzFRMGim2IqFKIQ4gXiEgJEgjpMiO1GaiXqzaI0VgRSIjjEFVEUkphkEzV5VJGvF4Mml7hyZqcX1npm+4L/Y5+LF57PX8OXvtf5+PFAEOnLXPb6+zzz7ru9dal7399tsBAAAAAAAALu49SgAAAAAAAACXJlQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAACgQqgEAAAAAAECBUA0AAAAAAAAKhGoAAAAAAABQIFQDAAAAAACAAqEaAAAAAAAAFAjVAAAAAAAAoECoBgAAAAAAAAVCNQAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAAACIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAAACIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgCHVAAAAAAAAYEg1AAAAAAAAGFINAAAAAAAAhlQDAAAAAACAIdUAAAAAAABgSDUAAAAAAAAYUg0AAAAAAACGVAMAAAAAAIAh1QAAAAAAAGBINQAAAAAAABhSDQAAAAAAAIZUAwAAAAAAgAEyZY5aTlTWlgAAAABJRU5ErkJggg==" alt="Arcéane">
+      <h1 class="hero-title">Arcéane Tools</h1>
+      <p class="hero-sub">Suite d'outils M&amp;A — CO-JAK</p>
+    </div>
+    <div class="tools-grid" id="tools-grid"></div>
+  </div>
+
+</main>
+
+<!-- ── Footer ── -->
+<footer>
+  <span class="footer-text">© CO-JAK — Tous droits réservés</span>
+  <a class="footer-link" href="https://github.com/jstaquet/arceane_tools" target="_blank">
+    github.com/jstaquet/arceane_tools
+  </a>
+</footer>
+
+<!-- ── Modale ajout outil ── -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Ajouter un outil</div>
+
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">URL *</label>
+        <input class="modal-input" id="m-url" type="text" placeholder="mon_outil.html" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Icône (emoji)</label>
+        <input class="modal-input" id="m-icon" type="text" placeholder="🔧" maxlength="4">
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">Nom *</label>
+        <input class="modal-input" id="m-name" type="text" placeholder="Mon outil" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Catégorie</label>
+        <input class="modal-input" id="m-cat" type="text" placeholder="Documents" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Description</label>
+      <textarea class="modal-textarea" id="m-desc" placeholder="Description courte…"></textarea>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Tags (séparés par des virgules)</label>
+      <input class="modal-input" id="m-tags" type="text" placeholder="pdf, document" autocomplete="off">
+    </div>
+
+    <div class="modal-hint">
+      URL relative (ex&nbsp;: <code>mon_outil.html</code>) pour un fichier dans le même dossier,
+      ou absolue (ex&nbsp;: <code>https://…</code>) pour un outil externe.
+      Les outils personnalisés sont sauvegardés dans le localStorage du navigateur.
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn ghost" onclick="closeModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="saveNewTool()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modale édition/suppression ── -->
+<div class="modal-backdrop" id="edit-backdrop" onclick="closeEditModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Modifier l'outil</div>
+    <input type="hidden" id="e-id">
+
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">URL</label>
+        <input class="modal-input" id="e-url" type="text" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Icône</label>
+        <input class="modal-input" id="e-icon" type="text" maxlength="4">
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">Nom</label>
+        <input class="modal-input" id="e-name" type="text" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Catégorie</label>
+        <input class="modal-input" id="e-cat" type="text" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Description</label>
+      <textarea class="modal-textarea" id="e-desc"></textarea>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Tags</label>
+      <input class="modal-input" id="e-tags" type="text" autocomplete="off">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn delete" onclick="deleteTool()">✕ Supprimer</button>
+      <button class="modal-btn ghost" onclick="closeEditModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="updateTool()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Données ────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'arceane_tools_v2';
+
+const BUILT_IN = [
+  {
+    id: 'caviardage', name: 'Caviardage', url: 'caviardage.html',
+    icon: '⬛', category: 'Documents',
+    desc: 'Caviardage irréversible de PDF et images. Rasterisation totale.',
+    tags: ['pdf', 'sécurité'], builtin: true
+  },
+  {
+    id: 'filigrane', name: 'Filigrane PDF', url: 'filigrane_pdf.html',
+    icon: '🔏', category: 'Documents',
+    desc: 'Ajout de filigrane texte sur PDF. Retour à la ligne automatique.',
+    tags: ['pdf', 'watermark'], builtin: true
+  }
+];
+
+function loadCustom() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveCustom(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list.filter(t => !t.builtin)));
+}
+
+function allTools() {
+  const custom = loadCustom();
+  const ids = new Set(BUILT_IN.map(t => t.id));
+  return [...BUILT_IN, ...custom.filter(t => !ids.has(t.id))];
+}
+
+// ── Rendu ──────────────────────────────────────────────────────────────
+function render() {
+  const tools = allTools();
+  document.getElementById('sidebar-count').textContent = tools.length;
+
+  // ── Sidebar ──
+  const nav = document.getElementById('nav-list');
+  const cats = {};
+  tools.forEach(t => {
+    const c = t.category || 'Outils';
+    if (!cats[c]) cats[c] = [];
+    cats[c].push(t);
+  });
+
+  nav.innerHTML = '';
+  Object.entries(cats).forEach(([cat, items]) => {
+    const catEl = document.createElement('div');
+    catEl.className = 'nav-category';
+    catEl.textContent = cat;
+    nav.appendChild(catEl);
+
+    items.forEach(tool => {
+      const a = document.createElement('a');
+      a.className = 'nav-item';
+      a.href = tool.url;
+      a.innerHTML = `
+        <span class="nav-item-icon">${tool.icon || '🔧'}</span>
+        <div class="nav-item-info">
+          <div class="nav-item-name">${esc(tool.name)}</div>
+          ${tool.desc ? `<div class="nav-item-desc">${esc(tool.desc)}</div>` : ''}
+        </div>
+        <span class="nav-item-arrow">›</span>
+      `;
+      nav.appendChild(a);
+    });
+  });
+
+  // ── Grille ──
+  const grid = document.getElementById('tools-grid');
+  if (tools.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">🧰</span>
+        <span class="empty-text">Aucun outil configuré.<br>Cliquez sur <strong>＋ Ajouter un outil</strong> pour commencer.</span>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = tools.map(tool => `
+    <a class="tool-card" href="${esc(tool.url)}">
+      <div class="tool-card-top">
+        <span class="tool-card-icon">${tool.icon || '🔧'}</span>
+        <span class="tool-card-name">${esc(tool.name)}</span>
+        ${tool.builtin ? '<span class="tool-card-badge">Intégré</span>' : `
+          <button onclick="event.preventDefault();event.stopPropagation();openEditModal('${esc(tool.id)}')"
+                  style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;margin-left:auto;padding:2px 6px;border-radius:2px;transition:color .15s;"
+                  onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--muted)'"
+                  title="Modifier">✎</button>
+        `}
+      </div>
+      ${tool.desc ? `<div class="tool-card-desc">${esc(tool.desc)}</div>` : ''}
+      ${tool.tags?.length ? `
+        <div class="tool-card-tags">
+          ${tool.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+        </div>` : ''}
+      <div class="tool-card-footer">
+        <span class="tool-card-open">Ouvrir →</span>
+      </div>
+    </a>
+  `).join('');
+}
+
+// ── Modale ajout ──────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('modal-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('m-url').focus(), 50);
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-backdrop')) {
+    document.getElementById('modal-backdrop').classList.remove('open');
+    ['m-url','m-name','m-icon','m-cat','m-desc','m-tags'].forEach(id =>
+      document.getElementById(id).value = '');
+  }
+}
+function saveNewTool() {
+  const url  = document.getElementById('m-url').value.trim();
+  const name = document.getElementById('m-name').value.trim();
+  if (!url || !name) {
+    const el = document.getElementById(url ? 'm-name' : 'm-url');
+    el.style.borderColor = 'var(--accent)';
+    setTimeout(() => el.style.borderColor = '', 1500);
+    return;
+  }
+  const tags = document.getElementById('m-tags').value
+    .split(',').map(t => t.trim()).filter(Boolean);
+  const custom = loadCustom();
+  custom.push({
+    id: 'custom_' + Date.now(), name, url,
+    icon: document.getElementById('m-icon').value.trim() || '🔧',
+    category: document.getElementById('m-cat').value.trim() || 'Outils',
+    desc: document.getElementById('m-desc').value.trim(),
+    tags, builtin: false
+  });
+  saveCustom(custom);
+  closeModal();
+  render();
+}
+
+// ── Modale édition ────────────────────────────────────────────────────
+function openEditModal(id) {
+  const tool = allTools().find(t => t.id === id);
+  if (!tool || tool.builtin) return;
+  document.getElementById('e-id').value   = tool.id;
+  document.getElementById('e-url').value  = tool.url;
+  document.getElementById('e-name').value = tool.name;
+  document.getElementById('e-icon').value = tool.icon || '';
+  document.getElementById('e-cat').value  = tool.category || '';
+  document.getElementById('e-desc').value = tool.desc || '';
+  document.getElementById('e-tags').value = (tool.tags || []).join(', ');
+  document.getElementById('edit-backdrop').classList.add('open');
+}
+function closeEditModal(e) {
+  if (!e || e.target === document.getElementById('edit-backdrop'))
+    document.getElementById('edit-backdrop').classList.remove('open');
+}
+function updateTool() {
+  const id = document.getElementById('e-id').value;
+  const custom = loadCustom();
+  const idx = custom.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  custom[idx] = {
+    ...custom[idx],
+    url:      document.getElementById('e-url').value.trim(),
+    name:     document.getElementById('e-name').value.trim(),
+    icon:     document.getElementById('e-icon').value.trim() || '🔧',
+    category: document.getElementById('e-cat').value.trim() || 'Outils',
+    desc:     document.getElementById('e-desc').value.trim(),
+    tags:     document.getElementById('e-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+  };
+  saveCustom(custom);
+  closeEditModal();
+  render();
+}
+function deleteTool() {
+  const id = document.getElementById('e-id').value;
+  const custom = loadCustom().filter(t => t.id !== id);
+  saveCustom(custom);
+  closeEditModal();
+  render();
+}
+
+// ── Clavier ───────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeEditModal(); }
+});
+
+// ── Utils ─────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+render();
+</script>
+
+</body>
+</html>
