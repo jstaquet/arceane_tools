@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignDoc — Signature Électronique</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f2ead8'/%3E%3Crect x='2' y='2' width='60' height='60' rx='9' fill='none' stroke='%23c9a84c' stroke-width='2.5'/%3E%3Cpath d='M14 46 Q22 30 30 34 Q36 37 28 50' stroke='%231a2c5e' stroke-width='2.8' fill='none' stroke-linecap='round'/%3E%3Cpath d='M28 50 Q34 42 42 36 Q48 31 46 42' stroke='%231a2c5e' stroke-width='2.8' fill='none' stroke-linecap='round'/%3E%3Cline x1='10' y1='52' x2='54' y2='52' stroke='%23c9a84c' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1410;
+    --parchment: #f9f5ef;
+    --cream: #f2ead8;
+    --gold: #c9a84c;
+    --gold-light: #e8d28a;
+    --rust: #8b4a2a;
+    --sage: #5c6b52;
+    --shadow: rgba(26,20,16,0.12);
+    --border: rgba(201,168,76,0.3);
+  }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Header */
+  header {
+    padding: 2rem 3rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(to bottom, rgba(242,234,216,0.8), transparent);
+  }
+  .logo {
+    font-family: 'Great Vibes', cursive;
+    font-size: 2.4rem;
+    color: var(--rust);
+    letter-spacing: 0.02em;
+  }
+  .logo-sub {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 300;
+  }
+
+  /* Main layout */
+  main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 80px);
+  }
+
+  /* Sidebar */
+  aside {
+    background: var(--cream);
+    border-right: 1px solid var(--border);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 1.5px dashed var(--gold);
+    border-radius: 4px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(201,168,76,0.04);
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    background: rgba(201,168,76,0.1);
+    border-color: var(--rust);
+  }
+  .drop-zone .icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.6;
+  }
+  .drop-zone p {
+    font-size: 0.9rem;
+    color: #6b5b47;
+    line-height: 1.5;
+  }
+  .drop-zone strong { color: var(--rust); }
+  #file-input { display: none; }
+
+  /* Form fields */
+  .field { margin-bottom: 1.25rem; }
+  label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #8b7355;
+    margin-bottom: 0.4rem;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: rgba(255,255,255,0.6);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input[type="text"]:focus, input[type="date"]:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.9);
+  }
+
+  /* Signature preview */
+  .sig-preview {
+    padding: 1rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sig-preview .sig-text {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 2.2rem;
+    color: #1a2c5e;
+    line-height: 1.2;
+  }
+  .sig-preview .paraph-text {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.4rem;
+    color: #1a2c5e;
+  }
+
+  /* Font selector */
+  .font-select {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .font-opt {
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.5);
+    font-size: 1.2rem;
+  }
+  .font-opt:hover { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+  .font-opt.active { border-color: var(--rust); background: rgba(139,74,42,0.08); }
+  .font-opt span { display: block; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8b7355; margin-top: 2px; }
+
+  /* Mode selector */
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mode-tab {
+    padding: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.4);
+    transition: all 0.2s;
+    border-right: 1px solid var(--border);
+  }
+  .mode-tab:last-child { border-right: none; }
+  .mode-tab:hover { background: rgba(201,168,76,0.1); }
+  .mode-tab.active { background: var(--rust); color: white; }
+  .mode-tab .tab-icon { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+
+  /* Color picker */
+  .color-opts {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .color-opt {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .color-opt:hover, .color-opt.active { border-color: var(--gold); transform: scale(1.15); }
+
+  /* Mention panel */
+  .mention-panel {
+    display: none;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    padding: 0.9rem;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+  .mention-panel.visible { display: flex; }
+  textarea.mention-input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: rgba(255,255,255,0.7);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  textarea.mention-input:focus { border-color: var(--gold); background: white; }
+  .mention-font-row {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .mention-font-opt {
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    background: rgba(255,255,255,0.5);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .mention-font-opt:hover { border-color: var(--gold); }
+  .mention-font-opt.active { border-color: var(--rust); background: rgba(139,74,42,0.08); }
+  .mention-size-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .mention-size-row input[type=range] {
+    flex: 1;
+    accent-color: var(--rust);
+  }
+  .mention-size-val {
+    font-size: 0.75rem;
+    color: #8b7355;
+    min-width: 28px;
+    text-align: right;
+  }
+  .mention-preview {
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    min-height: 36px;
+    font-size: 0.85rem;
+    color: var(--ink);
+    word-break: break-word;
+    line-height: 1.4;
+  }
+
+  /* Action button */
+  .btn-primary {
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--rust);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .btn-primary:hover { background: #6e3820; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139,74,42,0.3); }
+  .btn-primary:disabled { background: #c0b09a; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 0.7rem;
+    background: transparent;
+    color: var(--rust);
+    border: 1px solid var(--rust);
+    border-radius: 3px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(139,74,42,0.06); }
+
+  /* PDF Viewer */
+  .viewer-area {
+    padding: 2.5rem;
+    overflow-y: auto;
+    background: #e8e0d4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 1rem;
+    color: #9c8a72;
+    text-align: center;
+  }
+  .empty-state .big-icon { font-size: 5rem; opacity: 0.3; }
+  .empty-state h2 { font-size: 1.6rem; font-weight: 300; font-style: italic; }
+  .empty-state p { font-size: 0.9rem; opacity: 0.7; }
+
+  /* Page wrapper */
+  .page-wrapper {
+    position: relative;
+    background: white;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+    display: inline-block;
+    cursor: crosshair;
+  }
+  .page-wrapper canvas { display: block; }
+
+  /* Signature elements on the PDF */
+  .sig-element {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    padding: 4px 8px;
+    border: 1.5px dashed transparent;
+    border-radius: 2px;
+    transition: border-color 0.2s;
+    white-space: nowrap;
+  }
+  .sig-element:hover { border-color: rgba(201,168,76,0.6); }
+  .sig-element.selected { border-color: var(--gold); }
+
+  .sig-element .sig-handle {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 16px;
+    height: 16px;
+    background: var(--gold);
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: white;
+    line-height: 1;
+  }
+  .sig-element.selected .sig-handle { display: flex; }
+
+  .sig-element .resize-handle {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 10px;
+    height: 10px;
+    background: var(--gold);
+    cursor: se-resize;
+    display: none;
+  }
+  .sig-element.selected .resize-handle { display: block; }
+
+  /* Instructions bar */
+  .instructions-bar {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    color: #6b5b47;
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+  }
+
+  /* Page label */
+  .page-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #9c8a72;
+    margin-bottom: -1rem;
+    align-self: flex-start;
+    padding-left: 4px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 0.75rem 1.25rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0.5rem 0;
+  }
+
+  /* Signature mode toggle */
+  .sig-input-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .sig-input-tab {
+    flex: 1;
+    padding: 0.45rem 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.4);
+    transition: all 0.2s;
+    border-right: 1px solid var(--border);
+    color: #8b7355;
+  }
+  .sig-input-tab:last-child { border-right: none; }
+  .sig-input-tab.active { background: var(--ink); color: var(--parchment); }
+  .sig-input-tab:hover:not(.active) { background: rgba(201,168,76,0.1); }
+
+  /* Draw pad */
+  .draw-pad-container { display: none; flex-direction: column; gap: 0.6rem; }
+  .draw-pad-container.visible { display: flex; }
+
+  .draw-pad-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: white;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  .draw-pad-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 14px;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: rgba(201,168,76,0.25);
+    pointer-events: none;
+  }
+  #draw-canvas { display: block; width: 100%; touch-action: none; }
+  .draw-pad-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: rgba(139,115,85,0.35);
+    font-size: 0.9rem;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .draw-pad-actions { display: flex; gap: 0.4rem; }
+  .draw-pad-btn {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: rgba(255,255,255,0.6);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: #6b5b47;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .draw-pad-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+  .draw-pad-btn.confirm { background: var(--sage); color: white; border-color: var(--sage); }
+  .draw-pad-btn.confirm:hover { background: #4a5840; }
+  .draw-pen-size { display: flex; align-items: center; gap: 0.5rem; }
+  .draw-pen-size label { margin-bottom: 0; font-size: 0.65rem; white-space: nowrap; }
+  .draw-pen-size input[type=range] { flex: 1; accent-color: var(--rust); }
+  .pen-dot { background: var(--ink); border-radius: 50%; transition: all 0.15s; }
+  .drawn-sig-thumb { border: 1px solid var(--border); border-radius: 3px; background: white; padding: 4px; text-align: center; display: none; }
+  .drawn-sig-thumb.visible { display: block; }
+  .drawn-sig-thumb img { max-width: 100%; max-height: 50px; }
+  .drawn-sig-thumb span { display: block; font-size: 0.65rem; color: var(--sage); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+
+  /* Inline mention editing */
+  .sig-element.mention-editing {
+    border-color: var(--rust) !important;
+    cursor: text;
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 12px rgba(139,74,42,0.18);
+    z-index: 100;
+  }
+  .sig-element .mention-editable {
+    outline: none;
+    min-width: 60px;
+    min-height: 1em;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .mention-edit-hint {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--rust);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-family: 'Cormorant Garamond', serif;
+    text-transform: uppercase;
+  }
+  .sig-element.selected.mention-el .mention-edit-hint { opacity: 1; }
+
+  /* Footer copyright */
+  footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    padding: 0.7rem 3rem;
+    background: linear-gradient(to top, rgba(242,234,216,0.6), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9c8a72;
+  }
+  footer .footer-sep {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0.6;
+  }
+  footer strong {
+    color: var(--rust);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+  }
+  .gdrive-btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    width: 100%; margin-top: 0.6rem; padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: rgba(255,255,255,0.7);
+    font-family: 'Cormorant Garamond', serif; font-size: 0.8rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; color: #5f6368; transition: all 0.2s;
+  }
+  .gdrive-btn:hover { border-color: #4285f4; color: #4285f4; background: rgba(66,133,244,0.06); }
+  .gdrive-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .gdrive-status { display: none; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border-radius: 3px; font-size: 0.75rem; margin-top: 0.5rem; }
+  .gdrive-status.connected { display: flex; background: rgba(52,168,83,0.1); color: #1e7e34; border: 1px solid rgba(52,168,83,0.25); }
+  .gdrive-status.error { display: flex; background: rgba(234,67,53,0.08); color: #c62828; border: 1px solid rgba(234,67,53,0.2); }
+  .gdrive-file-info { display: none; flex-direction: column; gap: 0.25rem; padding: 0.5rem 0.65rem; background: rgba(66,133,244,0.05); border: 1px solid rgba(66,133,244,0.2); border-radius: 3px; margin-top: 0.5rem; }
+  .gdrive-file-info.visible { display: flex; }
+  .gdrive-file-info strong { color: #1a1410; font-size: 0.82rem; word-break: break-all; }
+  .gdrive-file-info span { color: #8b7355; font-size: 0.68rem; }
+  .gdrive-note { font-size: 0.68rem; color: #9c8a72; line-height: 1.5; padding: 0.5rem; background: rgba(201,168,76,0.05); border: 1px solid var(--border); border-radius: 3px; margin-top: 0.5rem; }
+  .gdrive-note a { color: var(--rust); text-decoration: none; }
+  .gdrive-note a:hover { text-decoration: underline; }
+  .gdrive-or { display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: #9c8a72; }
+  .gdrive-or::before, .gdrive-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .client-id-wrap { margin-top: 0.4rem; }
+  .client-id-wrap label { font-size: 0.65rem; }
+  .client-id-row { display: flex; gap: 0.4rem; margin-top: 0.3rem; }
+  .client-id-row input { flex: 1; padding: 0.38rem 0.55rem; border: 1px solid var(--border); border-radius: 3px; font-size: 0.72rem; font-family: monospace; background: rgba(255,255,255,0.7); color: var(--ink); outline: none; }
+  .client-id-row input:focus { border-color: #4285f4; }
+  .client-id-row button { padding: 0.38rem 0.65rem; background: #4285f4; color: white; border: none; border-radius: 3px; font-size: 0.7rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .client-id-row button:hover { background: #1a6de4; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SignDoc</div>
+  <div class="logo-sub">Signature électronique de documents</div>
+</header>
+
+<main>
+  <aside>
+    <!-- Document -->
+    <div>
+      <div class="section-title">Document</div>
+
+      <!-- Local file -->
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="icon">📄</div>
+        <p><strong>Déposer un PDF</strong><br>ou cliquer pour parcourir</p>
+      </div>
+      <input type="file" id="file-input" accept=".pdf">
+
+      <!-- Google Drive -->
+      <div class="gdrive-or">ou</div>
+
+      <div id="gdrive-section">
+        <!-- Step 1: not configured -->
+        <div id="gdrive-setup" style="display:none">
+          <div class="gdrive-note">
+            Pour ouvrir depuis Google Drive, entrez votre <strong>Client ID</strong> OAuth 2.0 Google.<br>
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank">→ Créer des identifiants</a> (activer Drive API + Picker API)
+          </div>
+          <div class="client-id-wrap">
+            <label>Client ID Google OAuth</label>
+            <div class="client-id-row">
+              <input type="text" id="gclient-id-input" placeholder="xxxx.apps.googleusercontent.com">
+              <button onclick="saveClientId()">OK</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: configured, not signed in -->
+        <div id="gdrive-signin" style="display:none">
+          <button class="gdrive-btn" id="btn-gdrive-signin" onclick="gdriveSignIn()">
+            <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#4285F4" d="M43.6 20H24v8.4h11.3C33.8 33 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l6-6C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#34A853" d="M6.3 14.7l6.9 5.1C14.9 16 19.1 13 24 13c3 0 5.7 1.1 7.8 2.9l6-6C34.5 6.1 29.5 4 24 4c-7.6 0-14.2 4.2-17.7 10.7z"/><path fill="#FBBC05" d="M24 44c5.4 0 10.3-1.8 14.1-4.9l-6.5-5.3C29.5 35.5 26.9 36 24 36c-5.4 0-9.7-2.9-11.3-7.2L5.6 34c3.5 6.5 10.1 10 18.4 10z"/><path fill="#EA4335" d="M43.6 20H24v8.4h11.3c-.8 2.3-2.3 4.2-4.3 5.4l6.5 5.3C41 35.9 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+            Connexion Google
+          </button>
+          <button class="gdrive-btn" onclick="showClientIdSetup()" style="margin-top:0;font-size:0.65rem;opacity:0.7">⚙ Changer le Client ID</button>
+        </div>
+
+        <!-- Step 3: signed in -->
+        <div id="gdrive-connected" style="display:none">
+          <div class="gdrive-status connected" id="gdrive-user-status">
+            <span>●</span> <span id="gdrive-user-name">Connecté</span>
+          </div>
+          <button class="gdrive-btn" id="btn-gdrive-pick" onclick="openDrivePicker()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Ouvrir un PDF depuis Drive
+          </button>
+          <div class="gdrive-file-info" id="gdrive-file-info">
+            <strong id="gdrive-file-name"></strong>
+            <span id="gdrive-file-meta"></span>
+          </div>
+          <button class="gdrive-btn" onclick="gdriveSignOut()" style="margin-top:0.3rem;font-size:0.65rem;opacity:0.65">Déconnexion</button>
+        </div>
+
+        <!-- Error state -->
+        <div class="gdrive-status error" id="gdrive-error" style="display:none">
+          <span>⚠</span> <span id="gdrive-error-msg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identité -->
+    <div>
+      <div class="section-title">Identité</div>
+      <div class="field">
+        <label>Nom complet (signature)</label>
+        <input type="text" id="full-name" placeholder="Jean Dupont" oninput="updatePreviews()">
+      </div>
+      <div class="field">
+        <label>Initiales (paraphe)</label>
+        <input type="text" id="initials" placeholder="J.D." oninput="updatePreviews()">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="sig-date" oninput="updatePreviews()">
+      </div>
+    </div>
+
+    <!-- Style -->
+    <div>
+      <div class="section-title">Signature</div>
+
+      <!-- Toggle typo / dessin -->
+      <div class="sig-input-toggle">
+        <div class="sig-input-tab active" id="tab-typo" onclick="setSigInputMode('typo')">✒ Typographique</div>
+        <div class="sig-input-tab" id="tab-draw" onclick="setSigInputMode('draw')">✏ Dessinée</div>
+      </div>
+
+      <!-- Typographic mode -->
+      <div id="typo-mode">
+        <div class="font-select">
+          <div class="font-opt active" onclick="selectFont('Pinyon Script')" data-font="Pinyon Script">
+            <span style="font-family:'Pinyon Script',cursive;font-size:1.4rem">Abc</span>
+            <span>Élégant</span>
+          </div>
+          <div class="font-opt" onclick="selectFont('Great Vibes')" data-font="Great Vibes">
+            <span style="font-family:'Great Vibes',cursive;font-size:1.4rem">Abc</span>
+            <span>Fluide</span>
+          </div>
+          <div class="font-opt" onclick="selectFont('Dancing Script')" data-font="Dancing Script">
+            <span style="font-family:'Dancing Script',cursive;font-size:1.4rem">Abc</span>
+            <span>Script</span>
+          </div>
+          <div class="font-opt" onclick="selectFont('Cormorant Garamond')" data-font="Cormorant Garamond">
+            <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem">Abc</span>
+            <span>Formel</span>
+          </div>
+        </div>
+        <div style="margin-top:1rem">
+          <label>Couleur d'encre</label>
+          <div class="color-opts">
+            <div class="color-opt active" style="background:#1a2c5e" data-color="#1a2c5e" onclick="selectColor('#1a2c5e')"></div>
+            <div class="color-opt" style="background:#1a1410" data-color="#1a1410" onclick="selectColor('#1a1410')"></div>
+            <div class="color-opt" style="background:#8b4a2a" data-color="#8b4a2a" onclick="selectColor('#8b4a2a')"></div>
+            <div class="color-opt" style="background:#2d5a3d" data-color="#2d5a3d" onclick="selectColor('#2d5a3d')"></div>
+            <div class="color-opt" style="background:#5c2d7a" data-color="#5c2d7a" onclick="selectColor('#5c2d7a')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Draw pad mode -->
+      <div class="draw-pad-container" id="draw-mode">
+        <div class="draw-pen-size">
+          <label>Épaisseur</label>
+          <input type="range" id="pen-size" min="1" max="8" value="2.5" step="0.5" oninput="updatePenDot()">
+          <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center">
+            <div class="pen-dot" id="pen-dot" style="width:5px;height:5px"></div>
+          </div>
+        </div>
+        <div>
+          <label>Couleur d'encre</label>
+          <div class="color-opts" style="margin-top:0.4rem">
+            <div class="color-opt active" style="background:#1a2c5e" data-color="#1a2c5e" onclick="selectColor('#1a2c5e')"></div>
+            <div class="color-opt" style="background:#1a1410" data-color="#1a1410" onclick="selectColor('#1a1410')"></div>
+            <div class="color-opt" style="background:#8b4a2a" data-color="#8b4a2a" onclick="selectColor('#8b4a2a')"></div>
+            <div class="color-opt" style="background:#2d5a3d" data-color="#2d5a3d" onclick="selectColor('#2d5a3d')"></div>
+            <div class="color-opt" style="background:#5c2d7a" data-color="#5c2d7a" onclick="selectColor('#5c2d7a')"></div>
+          </div>
+        </div>
+        <div class="draw-pad-wrap" id="draw-pad-wrap">
+          <canvas id="draw-canvas" width="280" height="110"></canvas>
+          <div class="draw-pad-hint" id="draw-hint">Signez ici</div>
+        </div>
+        <div class="draw-pad-actions">
+          <div class="draw-pad-btn" onclick="clearDrawPad()">⟳ Effacer</div>
+          <div class="draw-pad-btn confirm" onclick="confirmDrawnSig()">✓ Valider</div>
+        </div>
+        <div class="drawn-sig-thumb" id="drawn-sig-thumb">
+          <img id="drawn-sig-preview" src="" alt="Signature dessinée">
+          <span>✓ Signature enregistrée</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aperçu -->
+    <div id="typo-preview-section">
+      <div class="section-title">Aperçu</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
+        <label style="margin-bottom:0.2rem">Signature</label>
+        <div class="sig-preview">
+          <div class="sig-text" id="preview-sig">Jean Dupont</div>
+        </div>
+        <label style="margin-bottom:0.2rem">Paraphe</label>
+        <div class="sig-preview">
+          <div class="paraph-text" id="preview-paraph">J.D.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insérer -->
+    <div>
+      <div class="section-title">Insérer</div>
+      <div class="mode-tabs">
+        <div class="mode-tab active" data-mode="paraphe" onclick="setMode('paraphe')">
+          <span class="tab-icon">✍️</span>Paraphe
+        </div>
+        <div class="mode-tab" data-mode="signature" onclick="setMode('signature')">
+          <span class="tab-icon">✒️</span>Signature
+        </div>
+        <div class="mode-tab" data-mode="date" onclick="setMode('date')">
+          <span class="tab-icon">📅</span>Date
+        </div>
+        <div class="mode-tab" data-mode="mention" onclick="setMode('mention')">
+          <span class="tab-icon">📝</span>Mention
+        </div>
+      </div>
+
+      <!-- Mention panel -->
+      <div class="mention-panel" id="mention-panel">
+        <label>Texte de la mention</label>
+        <textarea class="mention-input" id="mention-text" placeholder="Ex : Lu et approuvé&#10;Bon pour accord&#10;Certifié conforme…" oninput="updateMentionPreview()"></textarea>
+        <label>Police</label>
+        <div class="mention-font-row" id="mention-font-row">
+          <div class="mention-font-opt active" data-mfont="Cormorant Garamond" style="font-family:'Cormorant Garamond',serif" onclick="selectMentionFont('Cormorant Garamond',this)">Garamond</div>
+          <div class="mention-font-opt" data-mfont="Georgia" style="font-family:Georgia,serif" onclick="selectMentionFont('Georgia',this)">Georgia</div>
+          <div class="mention-font-opt" data-mfont="Arial" style="font-family:Arial,sans-serif" onclick="selectMentionFont('Arial',this)">Arial</div>
+          <div class="mention-font-opt" data-mfont="Dancing Script" style="font-family:'Dancing Script',cursive" onclick="selectMentionFont('Dancing Script',this)">Script</div>
+        </div>
+        <label>Taille</label>
+        <div class="mention-size-row">
+          <input type="range" id="mention-size" min="8" max="32" value="12" oninput="document.getElementById('mention-size-val').textContent=this.value+'pt';updateMentionPreview()">
+          <span class="mention-size-val" id="mention-size-val">12pt</span>
+        </div>
+        <label>Aperçu</label>
+        <div class="mention-preview" id="mention-preview">Lu et approuvé</div>
+      </div>
+
+      <div style="margin-top:0.75rem;font-size:0.8rem;color:#8b7355;text-align:center" id="click-hint">
+        Cliquez sur la page pour placer
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Actions -->
+    <div style="display:flex;flex-direction:column;gap:0.6rem">
+      <button class="btn-primary" id="btn-export" disabled onclick="exportPDF()">
+        ⬇ Télécharger PDF signé
+      </button>
+      <button class="btn-secondary" onclick="clearAll()">Effacer tous les éléments</button>
+    </div>
+  </aside>
+
+  <!-- Viewer -->
+  <div class="viewer-area" id="viewer-area">
+    <div class="empty-state" id="empty-state">
+      <div class="big-icon">📃</div>
+      <h2>Aucun document ouvert</h2>
+      <p>Déposez un PDF dans le panneau de gauche<br>pour commencer à signer</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>© <script>document.write(new Date().getFullYear())</script> </span>
+  <strong>CO-JAK</strong>
+  <div class="footer-sep"></div>
+  <span>Conseil aux entreprises</span>
+  <div class="footer-sep"></div>
+  <span>SignDoc — Signature électronique</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // State
+  let pdfDoc = null;
+  let pdfBytes = null;
+  let currentMode = 'paraphe';
+  let currentFont = 'Pinyon Script';
+  let currentColor = '#1a2c5e';
+  let elements = []; // {id, type, page, x, y, text, font, color, size}
+  let selectedEl = null;
+  let dragging = null;
+  let dragOffset = {x:0, y:0};
+  let pdfScale = 1.5;
+
+  // Set default date
+  document.getElementById('sig-date').valueAsDate = new Date();
+
+  // Font sizes per type
+  const fontSizes = { signature: 38, paraphe: 24, date: 14, mention: 14 };
+
+  // Mention-specific state
+  let mentionFont = 'Cormorant Garamond';
+  let mentionSize = 12;
+
+  function setMode(m) {
+    currentMode = m;
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+    const panel = document.getElementById('mention-panel');
+    panel.classList.toggle('visible', m === 'mention');
+  }
+
+  function selectMentionFont(f, el) {
+    mentionFont = f;
+    document.querySelectorAll('.mention-font-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    updateMentionPreview();
+  }
+
+  function updateMentionPreview() {
+    const txt = document.getElementById('mention-text').value || 'Lu et approuvé';
+    const size = document.getElementById('mention-size').value;
+    mentionSize = parseInt(size);
+    const prev = document.getElementById('mention-preview');
+    prev.style.fontFamily = `'${mentionFont}', serif, sans-serif`;
+    prev.style.fontSize = (mentionSize * 1.33) + 'px';
+    prev.style.color = currentColor;
+    prev.textContent = txt;
+  }
+
+  function selectFont(f) {
+    currentFont = f;
+    document.querySelectorAll('.font-opt').forEach(o => o.classList.toggle('active', o.dataset.font === f));
+    updatePreviews();
+  }
+
+  function selectColor(c) {
+    currentColor = c;
+    document.querySelectorAll('.color-opt').forEach(o => o.classList.toggle('active', o.dataset.color === c));
+    updatePreviews();
+    updateMentionPreview();
+  }
+
+  function updatePreviews() {
+    const name = document.getElementById('full-name').value || 'Jean Dupont';
+    const init = document.getElementById('initials').value || 'J.D.';
+    const ps = document.getElementById('preview-sig');
+    const pp = document.getElementById('preview-paraph');
+    ps.style.fontFamily = `'${currentFont}', cursive, serif`;
+    ps.style.color = currentColor;
+    ps.textContent = name;
+    pp.style.fontFamily = `'${currentFont}', cursive, serif`;
+    pp.style.color = currentColor;
+    pp.textContent = init;
+  }
+
+  function getElementText(type) {
+    const name = document.getElementById('full-name').value;
+    const init = document.getElementById('initials').value;
+    const dateVal = document.getElementById('sig-date').value;
+    if (type === 'signature') return name || 'Votre Signature';
+    if (type === 'paraphe') return init || 'P.';
+    if (type === 'mention') return document.getElementById('mention-text').value || 'Mention libre';
+    if (type === 'date') {
+      if (!dateVal) return new Date().toLocaleDateString('fr-FR');
+      const [y,m,d] = dateVal.split('-');
+      return `${d}/${m}/${y}`;
+    }
+  }
+
+  // Drop zone
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') loadPDF(file);
+  });
+  document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) loadPDF(e.target.files[0]);
+  });
+
+  async function loadPDF(file) {
+    const buf = await file.arrayBuffer();
+    await loadPDFFromBuffer(buf, file.name);
+  }
+
+  async function renderAllPages() {
+    const viewer = document.getElementById('viewer-area');
+    viewer.innerHTML = '';
+    document.getElementById('empty-state')?.remove();
+
+    // Instructions
+    const instr = document.createElement('div');
+    instr.className = 'instructions-bar';
+    instr.textContent = 'Sélectionnez un type (signature / paraphe / date) puis cliquez sur la page pour le placer';
+    viewer.appendChild(instr);
+
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const label = document.createElement('div');
+      label.className = 'page-label';
+      label.textContent = `Page ${i} / ${pdfDoc.numPages}`;
+      viewer.appendChild(label);
+
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale: pdfScale });
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'page-wrapper';
+      wrapper.dataset.page = i;
+      wrapper.style.width = viewport.width + 'px';
+      wrapper.style.height = viewport.height + 'px';
+
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      wrapper.appendChild(canvas);
+
+      wrapper.addEventListener('click', (e) => onPageClick(e, i, wrapper));
+      viewer.appendChild(wrapper);
+
+      // Re-render existing elements for this page
+      elements.filter(el => el.page === i).forEach(el => renderElement(el, wrapper));
+    }
+  }
+
+  function onPageClick(e, pageNum, wrapper) {
+    if (e.target.closest('.sig-element')) return;
+    const rect = wrapper.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Drawn signature mode
+    if (currentMode === 'signature' && sigInputMode === 'draw') {
+      if (!drawnSigDataUrl) { showToast('Dessinez et validez votre signature d\'abord'); return; }
+      const el = {
+        id: Date.now(),
+        type: 'signature',
+        page: pageNum,
+        x: x,
+        y: y,
+        text: '',
+        font: '',
+        color: currentColor,
+        size: 60,
+        isDrawnImage: true,
+        imgDataUrl: drawnSigDataUrl
+      };
+      elements.push(el);
+      renderElement(el, wrapper);
+      return;
+    }
+
+    const isMention = currentMode === 'mention';
+    const elFont = isMention ? mentionFont : currentFont;
+    const elSize = isMention ? (mentionSize * 1.33) : fontSizes[currentMode];
+
+    // Bloquer si mention vide
+    if (isMention && !document.getElementById('mention-text').value.trim()) {
+      showToast('Saisissez le texte de la mention avant de la placer');
+      document.getElementById('mention-text').focus();
+      return;
+    }
+
+    // Paraphe : supprimer les paraphes existants puis répliquer sur toutes les pages
+    if (currentMode === 'paraphe') {
+      // Supprimer tous les paraphes existants (DOM + state)
+      elements.filter(el => el.type === 'paraphe').forEach(el => {
+        const existing = document.querySelector(`.sig-element[data-id="${el.id}"]`);
+        if (existing) existing.remove();
+      });
+      elements = elements.filter(el => el.type !== 'paraphe');
+
+      // Calculer la position relative (ratio) sur la page cliquée
+      const clickedCanvas = wrapper.querySelector('canvas');
+      const relX = x / clickedCanvas.width;
+      const relY = y / clickedCanvas.height;
+
+      // Poser un paraphe sur chaque page au même emplacement relatif
+      const numPages = pdfDoc ? pdfDoc.numPages : 1;
+      for (let p = 1; p <= numPages; p++) {
+        const pageWrapper = document.querySelector(`.page-wrapper[data-page="${p}"]`);
+        if (!pageWrapper) continue;
+        const pageCanvas = pageWrapper.querySelector('canvas');
+        const px = relX * pageCanvas.width;
+        const py = relY * pageCanvas.height;
+
+        const el = {
+          id: Date.now() + p,
+          type: 'paraphe',
+          page: p,
+          x: px,
+          y: py,
+          text: getElementText('paraphe'),
+          font: elFont,
+          color: currentColor,
+          size: elSize,
+          isMention: false
+        };
+        elements.push(el);
+        renderElement(el, pageWrapper);
+      }
+      showToast(`✍ Paraphe posé sur ${numPages} page${numPages > 1 ? 's' : ''}`);
+      return;
+    }
+
+    const el = {
+      id: Date.now(),
+      type: currentMode,
+      page: pageNum,
+      x: x,
+      y: y,
+      text: getElementText(currentMode),
+      font: elFont,
+      color: currentColor,
+      size: elSize,
+      isMention: isMention
+    };
+    elements.push(el);
+    renderElement(el, wrapper);
+
+    // Après avoir posé une mention, vider le champ pour en saisir une nouvelle
+    if (isMention) {
+      const ta = document.getElementById('mention-text');
+      ta.value = '';
+      updateMentionPreview();
+      ta.focus();
+    }
+  }
+
+  function renderElement(el, wrapper) {
+    const div = document.createElement('div');
+    div.className = 'sig-element';
+    div.dataset.id = el.id;
+    div.style.lineHeight = '1.4';
+
+    if (el.isDrawnImage) {
+      // Render as image
+      const img = document.createElement('img');
+      img.src = el.imgDataUrl;
+      img.style.height = el.size + 'px';
+      img.style.display = 'block';
+      img.style.maxWidth = '240px';
+      div.appendChild(img);
+      div.style.left = (el.x - 4) + 'px';
+      div.style.top = (el.y - el.size * 0.5) + 'px';
+      div.style.padding = '2px';
+      // Store img ref for resize
+      el._imgEl = img;
+    } else {
+      div.style.left = (el.x - 4) + 'px';
+      div.style.top = (el.y - el.size * 0.8) + 'px';
+      div.style.fontFamily = `'${el.font}', cursive, serif, sans-serif`;
+      div.style.fontSize = el.size + 'px';
+      div.style.color = el.color;
+      if (el.isMention) {
+        div.classList.add('mention-el');
+        div.style.whiteSpace = 'pre-wrap';
+        div.style.maxWidth = '320px';
+        div.style.minWidth = '80px';
+
+        // Editable content span
+        const textSpan = document.createElement('span');
+        textSpan.className = 'mention-editable';
+        textSpan.contentEditable = 'false';
+        textSpan.textContent = el.text;
+        div.appendChild(textSpan);
+        el._textSpan = textSpan;
+
+        // "Double-clic pour éditer" hint
+        const hint = document.createElement('div');
+        hint.className = 'mention-edit-hint';
+        hint.textContent = '✎ double-clic pour éditer';
+        div.appendChild(hint);
+
+        // Double-click → enter edit mode
+        div.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          enterMentionEditMode(el, div, textSpan);
+        });
+      } else {
+        div.textContent = el.text;
+      }
+    }
+
+    // Delete handle
+    const handle = document.createElement('div');
+    handle.className = 'sig-handle';
+    handle.textContent = '×';
+    handle.title = 'Supprimer';
+    handle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      elements = elements.filter(x => x.id !== el.id);
+      div.remove();
+    });
+    div.appendChild(handle);
+
+    // Resize
+    const resize = document.createElement('div');
+    resize.className = 'resize-handle';
+    resize.addEventListener('mousedown', (e) => { e.stopPropagation(); startResize(e, el, div); });
+    div.appendChild(resize);
+
+    // Drag
+    div.addEventListener('mousedown', (e) => {
+      if (e.target === handle || e.target === resize) return;
+      if (div.classList.contains('mention-editing')) return; // don't drag while editing
+      e.stopPropagation();
+      selectElement(div);
+      startDrag(e, el, div, wrapper);
+    });
+    div.addEventListener('click', (e) => { e.stopPropagation(); selectElement(div); });
+
+    wrapper.appendChild(div);
+  }
+
+  function enterMentionEditMode(el, div, textSpan) {
+    // Exit any other active edit
+    document.querySelectorAll('.mention-editing').forEach(d => {
+      const s = d.querySelector('.mention-editable');
+      if (s) exitMentionEditMode(d, s);
+    });
+
+    div.classList.add('mention-editing');
+    textSpan.contentEditable = 'true';
+    textSpan.focus();
+
+    // Place cursor at end
+    const range = document.createRange();
+    range.selectNodeContents(textSpan);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // Live update el.text as user types
+    const onInput = () => { el.text = textSpan.innerText; };
+    textSpan.addEventListener('input', onInput);
+
+    // Exit on Escape or click outside
+    const onKeydown = (e) => {
+      if (e.key === 'Escape') { textSpan.blur(); }
+    };
+    const onBlur = () => {
+      exitMentionEditMode(div, textSpan);
+      textSpan.removeEventListener('input', onInput);
+      document.removeEventListener('keydown', onKeydown);
+    };
+    textSpan.addEventListener('blur', onBlur, { once: true });
+    document.addEventListener('keydown', onKeydown);
+  }
+
+  function exitMentionEditMode(div, textSpan) {
+    div.classList.remove('mention-editing');
+    textSpan.contentEditable = 'false';
+    window.getSelection()?.removeAllRanges();
+  }
+
+  function selectElement(div) {
+    document.querySelectorAll('.sig-element').forEach(e => e.classList.remove('selected'));
+    div.classList.add('selected');
+    selectedEl = div;
+  }
+
+  function startDrag(e, el, div, wrapper) {
+    const startX = e.clientX - div.offsetLeft;
+    const startY = e.clientY - div.offsetTop;
+    const onMove = (ev) => {
+      const nx = ev.clientX - startX;
+      const ny = ev.clientY - startY;
+      div.style.left = nx + 'px';
+      div.style.top = ny + 'px';
+      el.x = nx + 4;
+      el.y = ny + el.size * 0.8;
+
+      // Sync all paraphes across pages when dragging one
+      if (el.type === 'paraphe') {
+        const srcCanvas = wrapper.querySelector('canvas');
+        const relX = el.x / srcCanvas.width;
+        const relY = el.y / srcCanvas.height;
+        elements.filter(p => p.type === 'paraphe' && p.id !== el.id).forEach(p => {
+          const pw = document.querySelector(`.page-wrapper[data-page="${p.page}"]`);
+          if (!pw) return;
+          const pc = pw.querySelector('canvas');
+          p.x = relX * pc.width;
+          p.y = relY * pc.height;
+          const pdiv = pw.querySelector(`.sig-element[data-id="${p.id}"]`);
+          if (pdiv) {
+            pdiv.style.left = (p.x - 4) + 'px';
+            pdiv.style.top = (p.y - p.size * 0.8) + 'px';
+          }
+        });
+      }
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function startResize(e, el, div) {
+    const startX = e.clientX;
+    const startSize = el.size;
+    const onMove = (ev) => {
+      const delta = ev.clientX - startX;
+      el.size = Math.max(10, startSize + delta * 0.5);
+      if (el.isDrawnImage && el._imgEl) {
+        el._imgEl.style.height = el.size + 'px';
+      } else {
+        div.style.fontSize = el.size + 'px';
+      }
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.sig-element')) {
+      document.querySelectorAll('.sig-element').forEach(el => el.classList.remove('selected'));
+    }
+  });
+
+  function clearAll() {
+    elements = [];
+    document.querySelectorAll('.sig-element').forEach(el => el.remove());
+    showToast('Tous les éléments ont été supprimés');
+  }
+
+  async function exportPDF() {
+    if (!pdfBytes) return;
+    showToast('⏳ Génération du PDF signé...');
+
+    try {
+      const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+      // Load font mappings - we'll embed as images via canvas
+      const pdfDocLib = await PDFDocument.load(pdfBytes.slice());
+      const pages = pdfDocLib.getPages();
+
+      // For each element, render to canvas and embed as image
+      for (const el of elements) {
+        const page = pages[el.page - 1];
+        const { width: pdfW, height: pdfH } = page.getSize();
+
+        const wrapper = document.querySelector(`.page-wrapper[data-page="${el.page}"]`);
+        if (!wrapper) continue;
+        const canvasEl = wrapper.querySelector('canvas');
+        const canvasW = canvasEl.width;
+        const canvasH = canvasEl.height;
+        const scaleX = pdfW / canvasW;
+        const scaleY = pdfH / canvasH;
+
+        let imgBytes, embeddedImg, drawW, drawH, pdfX, pdfY;
+
+        if (el.isDrawnImage) {
+          // Load the drawn image to get its natural dimensions
+          const imgEl = new Image();
+          await new Promise(r => { imgEl.onload = r; imgEl.src = el.imgDataUrl; });
+          const nw = imgEl.naturalWidth;
+          const nh = imgEl.naturalHeight;
+          const displayH = el.size; // px on screen
+          const displayW = nw * (displayH / nh);
+
+          imgBytes = await fetch(el.imgDataUrl).then(r => r.arrayBuffer());
+          embeddedImg = await pdfDocLib.embedPng(imgBytes);
+
+          pdfX = (el.x - 4) * scaleX;
+          pdfY = pdfH - (el.y - el.size * 0.5 + displayH) * scaleY;
+          drawW = displayW * scaleX;
+          drawH = displayH * scaleY;
+
+        } else {
+          // Render text to temp canvas (support multiline)
+          const tempCanvas = document.createElement('canvas');
+          const ctx = tempCanvas.getContext('2d');
+          const fontSize = el.size;
+          const lines = el.text.split('\n');
+          ctx.font = `${fontSize}px '${el.font}', cursive, serif, sans-serif`;
+          const lineHeight = fontSize * 1.4;
+          const maxWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
+          const textWidth = maxWidth + 24;
+          const textHeight = lineHeight * lines.length + fontSize * 0.4;
+          tempCanvas.width = textWidth;
+          tempCanvas.height = textHeight;
+
+          ctx.clearRect(0, 0, textWidth, textHeight);
+          ctx.font = `${fontSize}px '${el.font}', cursive, serif, sans-serif`;
+          ctx.fillStyle = el.color;
+          ctx.textBaseline = 'alphabetic';
+          lines.forEach((line, i) => {
+            ctx.fillText(line, 10, fontSize + i * lineHeight);
+          });
+
+          const imgData = tempCanvas.toDataURL('image/png');
+          imgBytes = await fetch(imgData).then(r => r.arrayBuffer());
+          embeddedImg = await pdfDocLib.embedPng(imgBytes);
+
+          pdfX = (el.x - 4) * scaleX;
+          pdfY = pdfH - (el.y) * scaleY - (textHeight * scaleY * 0.2);
+          drawW = textWidth * scaleX;
+          drawH = textHeight * scaleY;
+        }
+
+        page.drawImage(embeddedImg, { x: pdfX, y: pdfY, width: drawW, height: drawH });
+      }
+
+      const savedBytes = await pdfDocLib.save();
+      const blob = new Blob([savedBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'document_signe.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✓ PDF signé téléchargé avec succès !');
+    } catch(err) {
+      console.error(err);
+      showToast('❌ Erreur lors de la génération');
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Draw Pad ──────────────────────────────────────────────
+  let sigInputMode = 'typo'; // 'typo' | 'draw'
+  let drawnSigDataUrl = null; // confirmed drawn signature PNG
+  let isDrawing = false;
+  let lastX = 0, lastY = 0;
+  let drawCtx = null;
+  let padHasContent = false;
+
+  function setSigInputMode(mode) {
+    sigInputMode = mode;
+    document.getElementById('tab-typo').classList.toggle('active', mode === 'typo');
+    document.getElementById('tab-draw').classList.toggle('active', mode === 'draw');
+    document.getElementById('typo-mode').style.display = mode === 'typo' ? '' : 'none';
+    document.getElementById('draw-mode').classList.toggle('visible', mode === 'draw');
+    document.getElementById('typo-preview-section').style.display = mode === 'typo' ? '' : 'none';
+    if (mode === 'draw') initDrawPad();
+  }
+
+  function initDrawPad() {
+    const canvas = document.getElementById('draw-canvas');
+    if (drawCtx) return; // already init
+    // Size canvas to actual display size
+    const wrap = document.getElementById('draw-pad-wrap');
+    const w = wrap.clientWidth || 280;
+    canvas.width = w;
+    canvas.height = 110;
+    drawCtx = canvas.getContext('2d');
+    setupDrawEvents(canvas);
+  }
+
+  function setupDrawEvents(canvas) {
+    // Mouse
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; [lastX, lastY] = getPos(e, canvas); hideHint(); });
+    canvas.addEventListener('mousemove', (e) => { if (!isDrawing) return; draw(e, canvas); });
+    canvas.addEventListener('mouseup', () => { isDrawing = false; drawCtx.beginPath(); });
+    canvas.addEventListener('mouseleave', () => { isDrawing = false; drawCtx.beginPath(); });
+    // Touch
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); isDrawing = true; [lastX, lastY] = getPos(e.touches[0], canvas); hideHint(); }, {passive:false});
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (!isDrawing) return; draw(e.touches[0], canvas); }, {passive:false});
+    canvas.addEventListener('touchend', () => { isDrawing = false; drawCtx.beginPath(); });
+  }
+
+  function getPos(e, canvas) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    return [(e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY];
+  }
+
+  function draw(e, canvas) {
+    const penSize = parseFloat(document.getElementById('pen-size').value);
+    drawCtx.lineWidth = penSize;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+    drawCtx.strokeStyle = currentColor;
+    drawCtx.beginPath();
+    drawCtx.moveTo(lastX, lastY);
+    const [nx, ny] = getPos(e, canvas);
+    drawCtx.lineTo(nx, ny);
+    drawCtx.stroke();
+    [lastX, lastY] = [nx, ny];
+    padHasContent = true;
+  }
+
+  function hideHint() {
+    document.getElementById('draw-hint').style.opacity = '0';
+  }
+
+  function clearDrawPad() {
+    if (!drawCtx) return;
+    const canvas = document.getElementById('draw-canvas');
+    drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('draw-hint').style.opacity = '1';
+    padHasContent = false;
+    drawnSigDataUrl = null;
+    document.getElementById('drawn-sig-thumb').classList.remove('visible');
+  }
+
+  function confirmDrawnSig() {
+    if (!drawCtx || !padHasContent) { showToast('Dessinez d\'abord votre signature'); return; }
+    const canvas = document.getElementById('draw-canvas');
+    // Trim whitespace
+    drawnSigDataUrl = trimCanvas(canvas);
+    document.getElementById('drawn-sig-preview').src = drawnSigDataUrl;
+    document.getElementById('drawn-sig-thumb').classList.add('visible');
+    showToast('✓ Signature enregistrée — cliquez sur la page pour la placer');
+  }
+
+  function trimCanvas(canvas) {
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas;
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    let top = height, bottom = 0, left = width, right = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const alpha = data[(y * width + x) * 4 + 3];
+        if (alpha > 10) {
+          if (y < top) top = y;
+          if (y > bottom) bottom = y;
+          if (x < left) left = x;
+          if (x > right) right = x;
+        }
+      }
+    }
+    const pad = 8;
+    top = Math.max(0, top - pad);
+    bottom = Math.min(height - 1, bottom + pad);
+    left = Math.max(0, left - pad);
+    right = Math.min(width - 1, right + pad);
+    const tw = right - left + 1;
+    const th = bottom - top + 1;
+    const tmp = document.createElement('canvas');
+    tmp.width = tw; tmp.height = th;
+    tmp.getContext('2d').putImageData(ctx.getImageData(left, top, tw, th), 0, 0);
+    return tmp.toDataURL('image/png');
+  }
+
+  function updatePenDot() {
+    const s = parseFloat(document.getElementById('pen-size').value);
+    const dot = document.getElementById('pen-dot');
+    dot.style.width = (s * 2) + 'px';
+    dot.style.height = (s * 2) + 'px';
+    dot.style.background = currentColor;
+  }
+
+  // ── Google Drive Integration ──────────────────────────────
+  const GDRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+  const PICKER_API = 'picker';
+  const DRIVE_API = 'https://www.googleapis.com/drive/v3/files';
+
+  let gClientId = localStorage.getItem('gdrive_client_id') || '';
+  let gAccessToken = null;
+  let gPickerLoaded = false;
+  let gTokenClient = null;
+
+  function initGDrive() {
+    const setup = document.getElementById('gdrive-setup');
+    const signin = document.getElementById('gdrive-signin');
+    const connected = document.getElementById('gdrive-connected');
+
+    if (!gClientId) {
+      setup.style.display = 'block';
+      signin.style.display = 'none';
+      connected.style.display = 'none';
+      return;
+    }
+    setup.style.display = 'none';
+
+    // Try to restore session
+    if (gAccessToken) {
+      showGDriveConnected();
+    } else {
+      signin.style.display = 'block';
+      connected.style.display = 'none';
+    }
+  }
+
+  function saveClientId() {
+    const val = document.getElementById('gclient-id-input').value.trim();
+    if (!val) { showGDriveError('Veuillez entrer un Client ID valide'); return; }
+    gClientId = val;
+    localStorage.setItem('gdrive_client_id', gClientId);
+    gTokenClient = null;
+    document.getElementById('gdrive-error').style.display = 'none';
+    document.getElementById('gdrive-setup').style.display = 'none';
+    document.getElementById('gdrive-signin').style.display = 'block';
+  }
+
+  function showClientIdSetup() {
+    gAccessToken = null;
+    document.getElementById('gdrive-connected').style.display = 'none';
+    document.getElementById('gdrive-signin').style.display = 'none';
+    document.getElementById('gdrive-setup').style.display = 'block';
+    document.getElementById('gclient-id-input').value = gClientId;
+  }
+
+  function gdriveSignIn() {
+    hideGDriveError();
+    if (!gClientId) { showGDriveError('Configurez d\'abord votre Client ID'); return; }
+
+    // Init token client lazily
+    if (!gTokenClient) {
+      try {
+        gTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: gClientId,
+          scope: GDRIVE_SCOPES + ' https://www.googleapis.com/auth/drive.file',
+          callback: (resp) => {
+            if (resp.error) { showGDriveError('Erreur d\'authentification: ' + resp.error); return; }
+            gAccessToken = resp.access_token;
+            // Fetch user info
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: 'Bearer ' + gAccessToken }
+            }).then(r => r.json()).then(info => {
+              document.getElementById('gdrive-user-name').textContent = info.name || info.email || 'Connecté';
+              showGDriveConnected();
+              // Load Picker API
+              gapi.load(PICKER_API, () => { gPickerLoaded = true; });
+            }).catch(() => {
+              showGDriveConnected();
+              gapi.load(PICKER_API, () => { gPickerLoaded = true; });
+            });
+          }
+        });
+        // Load gapi if not done
+        if (typeof gapi !== 'undefined') {
+          gapi.load(PICKER_API, () => { gPickerLoaded = true; });
+        }
+      } catch(err) {
+        showGDriveError('Erreur init Google: ' + err.message);
+        return;
+      }
+    }
+    gTokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function gdriveSignOut() {
+    if (gAccessToken) {
+      google.accounts.oauth2.revoke(gAccessToken, () => {});
+    }
+    gAccessToken = null;
+    document.getElementById('gdrive-file-info').classList.remove('visible');
+    document.getElementById('gdrive-connected').style.display = 'none';
+    document.getElementById('gdrive-signin').style.display = 'block';
+    showToast('Déconnecté de Google Drive');
+  }
+
+  function showGDriveConnected() {
+    document.getElementById('gdrive-signin').style.display = 'none';
+    document.getElementById('gdrive-connected').style.display = 'block';
+    hideGDriveError();
+  }
+
+  function showGDriveError(msg) {
+    const el = document.getElementById('gdrive-error');
+    document.getElementById('gdrive-error-msg').textContent = msg;
+    el.style.display = 'flex';
+  }
+
+  function hideGDriveError() {
+    document.getElementById('gdrive-error').style.display = 'none';
+  }
+
+  function openDrivePicker() {
+    if (!gAccessToken) { showGDriveError('Connectez-vous d\'abord'); return; }
+    if (!gPickerLoaded) {
+      // Try loading now
+      gapi.load(PICKER_API, () => {
+        gPickerLoaded = true;
+        buildAndShowPicker();
+      });
+      return;
+    }
+    buildAndShowPicker();
+  }
+
+  function buildAndShowPicker() {
+    try {
+      const view = new google.picker.View(google.picker.ViewId.DOCS);
+      view.setMimeTypes('application/pdf');
+
+      const picker = new google.picker.PickerBuilder()
+        .enableFeature(google.picker.Feature.NAV_HIDDEN)
+        .setTitle('Choisir un PDF à signer')
+        .addView(view)
+        .setOAuthToken(gAccessToken)
+        .setCallback(pickerCallback)
+        .build();
+      picker.setVisible(true);
+    } catch(err) {
+      showGDriveError('Erreur Picker: ' + err.message);
+    }
+  }
+
+  async function pickerCallback(data) {
+    if (data[google.picker.Response.ACTION] !== google.picker.Action.PICKED) return;
+
+    const doc = data[google.picker.Response.DOCUMENTS][0];
+    const fileId = doc[google.picker.Document.ID];
+    const fileName = doc[google.picker.Document.NAME];
+    const fileSize = doc[google.picker.Document.SIZE_BYTES];
+
+    showToast('⏳ Téléchargement depuis Drive…');
+    hideGDriveError();
+
+    try {
+      const resp = await fetch(`${DRIVE_API}/${fileId}?alt=media`, {
+        headers: { Authorization: 'Bearer ' + gAccessToken }
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text();
+        if (resp.status === 403) {
+          showGDriveError('Accès refusé. Vérifiez les permissions OAuth.');
+        } else {
+          showGDriveError(`Erreur ${resp.status}: ${txt.substring(0,80)}`);
+        }
+        return;
+      }
+
+      const arrayBuf = await resp.arrayBuffer();
+
+      // Show file info
+      const info = document.getElementById('gdrive-file-info');
+      document.getElementById('gdrive-file-name').textContent = fileName;
+      const kb = fileSize ? ` · ${Math.round(fileSize/1024)} Ko` : '';
+      document.getElementById('gdrive-file-meta').textContent = `Google Drive${kb}`;
+      info.classList.add('visible');
+
+      // Load PDF (reuse existing loadPDF logic with arrayBuffer)
+      await loadPDFFromBuffer(arrayBuf, fileName);
+
+    } catch(err) {
+      showGDriveError('Erreur: ' + err.message);
+    }
+  }
+
+  // Separate PDF loading from file bytes (used by both local + Drive)
+  async function loadPDFFromBuffer(arrayBuf, name) {
+    pdfBytes = arrayBuf;
+    const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice() });
+    pdfDoc = await loadingTask.promise;
+    elements = [];
+    renderAllPages();
+    document.getElementById('btn-export').disabled = false;
+    showToast(`✓ "${name}" — ${pdfDoc.numPages} page(s)`);
+  }
+
+  // Init on load (after gsi script loads)
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        initGDrive();
+      } else {
+        // gsi not loaded (offline?) — show setup
+        document.getElementById('gdrive-setup').style.display = 'block';
+      }
+    }, 800);
+  });
+
+  // ── Init previews
+  updatePreviews();
+  updatePenDot();
+</script>
+</body>
+</html>
