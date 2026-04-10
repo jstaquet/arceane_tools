@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcéane · Générateur de teasers LinkedIn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --or: #E1A000;
+    --or-light: #F5C842;
+    --or-dark: #B07D00;
+    --noir: #1E1E1E;
+    --gris: #E1E1E1;
+    --gris-moyen: #9A9A9A;
+    --blanc: #FFFFFF;
+    --fond: #F7F6F4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--fond);
+    color: var(--noir);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--blanc);
+    border-bottom: 3px solid var(--or);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: var(--or);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-10deg);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700; font-size: 22px;
+    color: white; letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+  .logo-text { line-height: 1; }
+  .logo-text strong {
+    display: block;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700; font-size: 22px;
+    color: var(--noir); letter-spacing: -0.5px;
+  }
+  .logo-text span {
+    font-size: 11px; font-weight: 300;
+    color: var(--gris-moyen); letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .header-badge {
+    margin-left: auto;
+    background: var(--fond);
+    border: 1px solid var(--gris);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px; color: var(--gris-moyen);
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+  .header-badge span { color: var(--or); }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* ── SECTION TITRES ── */
+  .section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--or); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--gris);
+  }
+
+  /* ── FORMULAIRE ── */
+  .form-panel {
+    background: var(--blanc);
+    border: 1px solid var(--gris);
+    border-top: 4px solid var(--or);
+    border-radius: 2px;
+    padding: 32px;
+  }
+  .form-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 20px; font-weight: 700;
+    margin-bottom: 6px; color: var(--noir);
+  }
+  .form-sub {
+    font-size: 13px; color: var(--gris-moyen);
+    margin-bottom: 28px; line-height: 1.5;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--noir); margin-bottom: 6px;
+  }
+  .field label .req { color: var(--or); margin-left: 2px; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    border: 1px solid var(--gris);
+    border-radius: 2px;
+    padding: 10px 14px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px; color: var(--noir);
+    background: var(--blanc);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--or);
+    box-shadow: 0 0 0 3px rgba(225,160,0,0.12);
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field select { cursor: pointer; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .api-field {
+    background: #FFFBF0;
+    border: 1px solid rgba(225,160,0,0.3);
+    border-radius: 2px;
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+  .api-field label {
+    display: block;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--or-dark); margin-bottom: 6px;
+  }
+  .api-field input {
+    width: 100%;
+    border: 1px solid rgba(225,160,0,0.4);
+    border-radius: 2px;
+    padding: 9px 12px;
+    font-family: 'Nunito Sans', monospace;
+    font-size: 13px; color: var(--noir);
+    background: transparent; outline: none;
+    transition: border-color 0.2s;
+  }
+  .api-field input:focus { border-color: var(--or); }
+  .api-note {
+    font-size: 11px; color: var(--or-dark);
+    margin-top: 5px; display: flex; align-items: center; gap: 5px;
+  }
+
+  .btn-generate {
+    width: 100%;
+    background: var(--or);
+    color: var(--blanc);
+    border: none; border-radius: 2px;
+    padding: 14px 24px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-generate:hover { background: var(--or-dark); }
+  .btn-generate:active { transform: scale(0.99); }
+  .btn-generate:disabled {
+    background: var(--gris); color: var(--gris-moyen); cursor: not-allowed;
+  }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PANNEAU RÉSULTAT ── */
+  .result-panel {
+    position: sticky; top: 24px;
+  }
+
+  .script-preview {
+    background: var(--blanc);
+    border: 1px solid var(--gris);
+    border-top: 4px solid var(--noir);
+    border-radius: 2px;
+    padding: 32px;
+    min-height: 300px;
+  }
+
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 280px; text-align: center;
+    color: var(--gris-moyen);
+  }
+  .empty-icon {
+    width: 56px; height: 56px;
+    background: var(--gris);
+    border-radius: 50%;
+    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .empty-state p { font-size: 14px; line-height: 1.6; max-width: 240px; }
+
+  /* ── SLIDES ── */
+  .slides-container { display: none; }
+  .slides-container.visible { display: block; }
+
+  .slides-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .slides-meta { font-size: 12px; color: var(--gris-moyen); }
+  .slides-meta strong { color: var(--or); }
+
+  .slide-card {
+    border: 1px solid var(--gris);
+    border-left: 4px solid var(--gris);
+    border-radius: 2px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    background: var(--blanc);
+    transition: border-left-color 0.2s;
+    animation: slideIn 0.3s ease forwards;
+    opacity: 0;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .slide-card:nth-child(1) { animation-delay: 0.05s; border-left-color: var(--or); }
+  .slide-card:nth-child(2) { animation-delay: 0.10s; border-left-color: var(--noir); }
+  .slide-card:nth-child(3) { animation-delay: 0.15s; border-left-color: var(--or); }
+  .slide-card:nth-child(4) { animation-delay: 0.20s; border-left-color: var(--noir); }
+  .slide-card:nth-child(5) { animation-delay: 0.25s; border-left-color: var(--or); }
+  .slide-card:nth-child(6) { animation-delay: 0.30s; border-left-color: var(--noir); }
+
+  .slide-num {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--gris-moyen); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .slide-type-badge {
+    background: var(--gris);
+    padding: 2px 7px; border-radius: 2px;
+    font-size: 10px; color: var(--gris-moyen);
+  }
+  .slide-duration {
+    margin-left: auto;
+    font-size: 10px; color: var(--gris-moyen);
+  }
+  .slide-text {
+    font-size: 15px; font-weight: 600;
+    color: var(--noir); line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .slide-sub {
+    font-size: 12px; color: var(--gris-moyen);
+    line-height: 1.4;
+  }
+
+  /* ── ACCROCHE LINKEDIN ── */
+  .linkedin-block {
+    margin-top: 20px;
+    background: #EBF5FB;
+    border: 1px solid #AED6F1;
+    border-radius: 2px;
+    padding: 16px 18px;
+  }
+  .linkedin-block .lbl {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #1A5276;
+    margin-bottom: 8px;
+  }
+  .linkedin-block p {
+    font-size: 13px; line-height: 1.6; color: #1A5276;
+    white-space: pre-wrap;
+  }
+
+  /* ── ACTIONS ── */
+  .actions-bar {
+    display: flex; gap: 10px; margin-top: 16px;
+  }
+  .btn-copy, .btn-json {
+    flex: 1;
+    padding: 10px 14px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .btn-copy {
+    background: var(--noir); color: var(--blanc); border: none;
+  }
+  .btn-copy:hover { background: #333; }
+  .btn-json {
+    background: transparent; color: var(--gris-moyen);
+    border: 1px solid var(--gris);
+  }
+  .btn-json:hover { border-color: var(--or); color: var(--or); }
+
+  /* ── ERROR ── */
+  .error-msg {
+    background: #FFF5F5;
+    border: 1px solid #FCCACA;
+    border-left: 4px solid #E53E3E;
+    border-radius: 2px;
+    padding: 14px 16px;
+    font-size: 13px; color: #C53030;
+    margin-top: 16px; display: none;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--gris-moyen);
+    letter-spacing: 0.5px;
+    border-top: 1px solid var(--gris);
+    margin-top: 40px;
+  }
+  footer span { color: var(--or); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .container { grid-template-columns: 1fr; padding: 20px 16px; }
+    header { padding: 14px 20px; }
+    .result-panel { position: static; }
+    .field-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">a</div>
+  <div class="logo-text">
+    <strong>Arcéane</strong>
+    <span>Cession · Acquisition</span>
+  </div>
+  <div class="header-badge">Générateur <span>LinkedIn</span> · GPT-5.4 mini</div>
+</header>
+
+<div class="container">
+
+  <!-- ── FORMULAIRE ── -->
+  <div class="form-panel">
+    <div class="form-title">Brief deal M&A</div>
+    <p class="form-sub">Renseignez les informations du dossier pour générer automatiquement le script de votre teaser LinkedIn.</p>
+
+    <div class="api-field">
+      <label>Clé API OpenAI <span style="font-weight:300;text-transform:none;letter-spacing:0">(stockée localement)</span></label>
+      <input type="password" id="apiKey" placeholder="sk-proj-..." autocomplete="off">
+      <p class="api-note">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Non transmise — utilisée directement depuis votre navigateur
+      </p>
+    </div>
+
+    <div class="section-label">Entreprise cible</div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Nom de la cible <span class="req">*</span></label>
+        <input type="text" id="nomCible" placeholder="ex : Groupe Martin SAS">
+      </div>
+      <div class="field">
+        <label>Secteur d'activité <span class="req">*</span></label>
+        <input type="text" id="secteur" placeholder="ex : Industrie agro-alimentaire">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Taille / CA</label>
+        <input type="text" id="taille" placeholder="ex : 12 M€ de CA, 85 salariés">
+      </div>
+      <div class="field">
+        <label>Pays / Région</label>
+        <input type="text" id="pays" placeholder="ex : Nord-Pas-de-Calais">
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Opération</div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Type d'opération <span class="req">*</span></label>
+        <select id="typeOp">
+          <option value="">— Sélectionner —</option>
+          <option>Cession</option>
+          <option>Acquisition / Build-up</option>
+          <option>LBO</option>
+          <option>Transmission familiale</option>
+          <option>Rapprochement stratégique</option>
+          <option>Levée de fonds</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Acquéreur (si connu)</label>
+        <input type="text" id="acquereur" placeholder="ex : Groupe industriel régional">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Taille du deal</label>
+        <input type="text" id="tailleDeal" placeholder="ex : 8–15 M€">
+      </div>
+      <div class="field">
+        <label>Angle narratif</label>
+        <select id="angle">
+          <option value="">— Sélectionner —</option>
+          <option>Transmission réussie</option>
+          <option>Croissance externe</option>
+          <option>Repositionnement stratégique</option>
+          <option>Nouveau départ</option>
+          <option>Pérennisation du savoir-faire</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Contenu</div>
+
+    <div class="field">
+      <label>Description libre</label>
+      <textarea id="description" placeholder="Décrivez l'entreprise, son histoire, ses atouts, le contexte de l'opération..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Points différenciants</label>
+      <textarea id="differenciants" placeholder="ex : Leader régional, marque reconnue, savoir-faire centenaire, carnet de commandes solide..." style="min-height:64px"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Ton souhaité</label>
+      <select id="ton">
+        <option value="professionnel et sobre">Professionnel & sobre</option>
+        <option value="dynamique et accrocheur">Dynamique & accrocheur</option>
+        <option value="confidentiel et discret">Confidentiel & discret</option>
+        <option value="storytelling humain">Storytelling humain</option>
+        <option value="factuel et chiffré">Factuel & chiffré</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Durée vidéo</label>
+      <select id="duree">
+        <option value="30">30 secondes (5 slides)</option>
+        <option value="45" selected>45 secondes (6 slides)</option>
+        <option value="60">60 secondes (8 slides)</option>
+      </select>
+    </div>
+
+    <button class="btn-generate" id="btnGenerate" onclick="genererScript()">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnLabel">Générer le script</span>
+    </button>
+
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- ── RÉSULTAT ── -->
+  <div class="result-panel">
+    <div class="script-preview">
+      <div class="section-label">Script vidéo</div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">▷</div>
+        <p>Remplissez le formulaire et cliquez sur <strong>Générer le script</strong> pour créer votre teaser LinkedIn.</p>
+      </div>
+
+      <div class="slides-container" id="slidesContainer">
+        <div class="slides-header">
+          <div>
+            <div style="font-family:'Nunito',sans-serif;font-size:17px;font-weight:700;color:var(--noir)" id="dealTitle">—</div>
+            <div class="slides-meta" id="dealMeta">—</div>
+          </div>
+          <div class="slides-meta"><strong id="totalDuration">—</strong></div>
+        </div>
+        <div id="slidesList"></div>
+        <div class="linkedin-block" id="linkedinBlock" style="display:none">
+          <div class="lbl">Accroche LinkedIn</div>
+          <p id="linkedinText"></p>
+        </div>
+        <div class="actions-bar">
+          <button class="btn-copy" onclick="copierScript()">Copier le script</button>
+          <button class="btn-json" onclick="exporterJSON()">Export JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  © Arcéane <span>·</span> Cession - Acquisition <span>·</span> 30 boulevard Leclerc, 59100 Roubaix <span>·</span> arceane.com
+</footer>
+
+<script>
+let currentScript = null;
+
+async function genererScript() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const nomCible = document.getElementById('nomCible').value.trim();
+  const secteur = document.getElementById('secteur').value.trim();
+  const typeOp = document.getElementById('typeOp').value;
+
+  if (!apiKey) return afficherErreur('Veuillez renseigner votre clé API OpenAI.');
+  if (!nomCible) return afficherErreur('Le nom de la cible est requis.');
+  if (!secteur) return afficherErreur('Le secteur d\'activité est requis.');
+  if (!typeOp) return afficherErreur('Veuillez sélectionner un type d\'opération.');
+
+  const taille = document.getElementById('taille').value;
+  const pays = document.getElementById('pays').value;
+  const acquereur = document.getElementById('acquereur').value;
+  const tailleDeal = document.getElementById('tailleDeal').value;
+  const angle = document.getElementById('angle').value;
+  const description = document.getElementById('description').value;
+  const differenciants = document.getElementById('differenciants').value;
+  const ton = document.getElementById('ton').value;
+  const duree = document.getElementById('duree').value;
+  const nbSlides = duree === '30' ? 5 : duree === '45' ? 6 : 8;
+
+  cacherErreur();
+  setLoading(true);
+
+  const systemPrompt = `Tu es un expert en communication M&A pour le cabinet Arcéane (Roubaix), spécialisé en cession-acquisition de PME. 
+Tu génères des scripts de vidéos courtes pour LinkedIn, professionnels, concis et impactants.
+Le ton de la marque Arcéane est : élégant, sobre, humain, orienté réussite.
+Tu réponds UNIQUEMENT en JSON valide, sans markdown, sans commentaires.`;
+
+  const userPrompt = `Génère un script de teaser LinkedIn M&A pour Arcéane avec ces données :
+
+Entreprise cible : ${nomCible}
+Secteur : ${secteur}
+${taille ? `Taille/CA : ${taille}` : ''}
+${pays ? `Localisation : ${pays}` : ''}
+Type d'opération : ${typeOp}
+${acquereur ? `Acquéreur : ${acquereur}` : ''}
+${tailleDeal ? `Taille du deal : ${tailleDeal}` : ''}
+${angle ? `Angle narratif : ${angle}` : ''}
+${description ? `Description : ${description}` : ''}
+${differenciants ? `Points différenciants : ${differenciants}` : ''}
+Ton souhaité : ${ton}
+Durée : ${duree} secondes, ${nbSlides} slides
+
+Retourne EXACTEMENT ce JSON (sans rien d'autre) :
+{
+  "titre_deal": "Titre court du deal (5-7 mots max)",
+  "meta": "Type opération · Secteur · Localisation",
+  "duree_totale": "${duree}s",
+  "slides": [
+    {
+      "numero": 1,
+      "type": "accroche",
+      "texte_principal": "Phrase courte d'accroche percutante (max 8 mots)",
+      "sous_texte": "Précision courte optionnelle (max 10 mots)",
+      "duree_s": 5
+    }
+  ],
+  "accroche_linkedin": "Post LinkedIn d'accompagnement en 3-4 phrases, avec 3 hashtags M&A pertinents à la fin"
+}
+
+Types de slides possibles : accroche, contexte, chiffres_cles, atouts, opportunite, conclusion
+Le dernier slide doit toujours être "conclusion" avec le branding Arcéane.
+Répartis les ${nbSlides} slides de façon narrative et rythmée.
+Textes courts, percutants, adaptés à une vidéo animée professionnelle.`;
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 1200,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || `Erreur API (${res.status})`);
+    }
+
+    const data = await res.json();
+    const raw = data.choices[0].message.content.trim();
+    const jsonStr = raw.replace(/^```json?\s*/,'').replace(/\s*```$/,'');
+    currentScript = JSON.parse(jsonStr);
+    afficherScript(currentScript);
+
+  } catch(e) {
+    afficherErreur('Erreur : ' + e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function afficherScript(s) {
+  document.getElementById('emptyState').style.display = 'none';
+  const sc = document.getElementById('slidesContainer');
+  sc.classList.add('visible');
+
+  document.getElementById('dealTitle').textContent = s.titre_deal || '—';
+  document.getElementById('dealMeta').textContent = s.meta || '—';
+  document.getElementById('totalDuration').textContent = s.duree_totale || '—';
+
+  const list = document.getElementById('slidesList');
+  list.innerHTML = '';
+
+  const typeLabels = {
+    accroche: 'Accroche', contexte: 'Contexte',
+    chiffres_cles: 'Chiffres', atouts: 'Atouts',
+    opportunite: 'Opportunité', conclusion: 'Conclusion'
+  };
+
+  (s.slides || []).forEach((slide, i) => {
+    const card = document.createElement('div');
+    card.className = 'slide-card';
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.innerHTML = `
+      <div class="slide-num">
+        Slide ${slide.numero || i+1}
+        <span class="slide-type-badge">${typeLabels[slide.type] || slide.type}</span>
+        <span class="slide-duration">${slide.duree_s || '—'}s</span>
+      </div>
+      <div class="slide-text">${escHtml(slide.texte_principal || '')}</div>
+      ${slide.sous_texte ? `<div class="slide-sub">${escHtml(slide.sous_texte)}</div>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  if (s.accroche_linkedin) {
+    document.getElementById('linkedinText').textContent = s.accroche_linkedin;
+    document.getElementById('linkedinBlock').style.display = 'block';
+  }
+}
+
+function copierScript() {
+  if (!currentScript) return;
+  let txt = `TEASER LINKEDIN · ${currentScript.titre_deal}\n`;
+  txt += `${currentScript.meta} · ${currentScript.duree_totale}\n\n`;
+  (currentScript.slides || []).forEach(s => {
+    txt += `[Slide ${s.numero} – ${s.type} – ${s.duree_s}s]\n`;
+    txt += `${s.texte_principal}\n`;
+    if (s.sous_texte) txt += `${s.sous_texte}\n`;
+    txt += '\n';
+  });
+  if (currentScript.accroche_linkedin) {
+    txt += `\n── ACCROCHE LINKEDIN ──\n${currentScript.accroche_linkedin}`;
+  }
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '✓ Copié !';
+    setTimeout(() => btn.textContent = 'Copier le script', 2000);
+  });
+}
+
+function exporterJSON() {
+  if (!currentScript) return;
+  const blob = new Blob([JSON.stringify(currentScript, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `arceane-teaser-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('btnGenerate');
+  const spinner = document.getElementById('spinner');
+  const label = document.getElementById('btnLabel');
+  btn.disabled = on;
+  spinner.style.display = on ? 'block' : 'none';
+  label.textContent = on ? 'Génération en cours…' : 'Générer le script';
+}
+
+function afficherErreur(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.style.display = 'block';
+}
+function cacherErreur() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
