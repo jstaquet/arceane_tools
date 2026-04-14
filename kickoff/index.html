@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcéane — Kick-off Acquisition</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- KEY MODAL -->
+  <div class="key-modal-overlay" id="key-modal">
+    <div class="key-modal">
+      <h3>Clé API OpenAI requise</h3>
+      <p>L'analyse IA (extraction de fiche et synthèse narrative) nécessite une clé API OpenAI. Elle est sauvegardée uniquement dans votre navigateur — jamais transmise à un serveur tiers.</p>
+      <label>Votre clé API OpenAI</label>
+      <input type="password" id="key-input" placeholder="sk-…" autocomplete="off" style="margin-bottom:6px">
+      <div class="key-error" id="key-error"></div>
+      <div class="key-modal-footer">
+        <button class="btn-g" id="btn-key-cancel">Annuler</button>
+        <button class="btn-p" id="btn-key-confirm">Enregistrer et continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP BAR -->
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">Arc</div>
+      <div><div class="brand-name">Arcéane</div></div>
+    </div>
+    <div class="top-bar-right">
+      <span class="brand-copy">Kick-off Acquisition · © CO-JAK</span>
+    </div>
+  </header>
+
+  <!-- KEY STATUS BAR -->
+  <div class="key-bar">
+    <span>API OpenAI :</span>
+    <span id="api-key-status" class="key-status warn">Aucune clé enregistrée</span>
+    <button class="btn-g btn-sm" id="btn-clear-key" style="display:none" onclick="AI.clearKey()">Effacer</button>
+    <button class="btn-g btn-sm" onclick="showKeyModal()">Configurer la clé</button>
+    <span style="color:var(--text-t);font-size:11px">· Modèle : gpt-4.5-mini</span>
+  </div>
+
+  <!-- IMPORT ZONE -->
+  <div class="import-zone" id="drop-zone"
+    onclick="document.getElementById('file-input').click()"
+    ondragover="App.onDrag(event,true)"
+    ondragleave="App.onDrag(event,false)"
+    ondrop="App.onDrop(event)">
+    <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" onchange="App.handleFile(this.files[0])">
+    <div class="iz-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 16V8m0 0-3 3m3-3 3 3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+    </div>
+    <div class="iz-text">
+      <div class="iz-title" id="iz-title">Importer une fiche de cadrage existante</div>
+      <div class="iz-sub" id="iz-sub">Glissez-déposez ou cliquez — l'IA extrait et pré-remplit les modules automatiquement</div>
+      <div class="iz-formats">
+        <span class="iz-fmt">PDF</span><span class="iz-fmt">Word</span><span class="iz-fmt">TXT</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="import-status" id="import-status"></div>
+  <div class="import-mapping" id="import-mapping">
+    <div class="mapping-bar">
+      <span class="mapping-label" id="map-count">0 champs importés</span>
+      <button class="btn-g btn-sm" onclick="Import.reset()">Effacer l'import</button>
+    </div>
+    <div class="mapping-chips" id="mapping-chips"></div>
+  </div>
+
+  <!-- PROFILE BAR -->
+  <div class="profile-bar">
+    <span>Profil :</span> <span class="pb-val" id="pb-nom">—</span>
+    <span id="pb-tw" style="display:none"><span id="pb-type" class="pill"></span></span>
+    <span>Mission :</span> <span class="pb-val" id="pb-mission">Nouveau dossier</span>
+    <div class="prog-wrap">
+      <span class="prog-label" id="prog-label">0 / 6</span>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- NAV TABS -->
+  <nav class="nav-tabs">
+    <button class="tab active" onclick="App.goTab(0)"><span class="tab-badge"></span>Acquéreur</button>
+    <button class="tab" onclick="App.goTab(1)"><span class="tab-badge"></span>Personnalité</button>
+    <button class="tab" onclick="App.goTab(2)"><span class="tab-badge"></span>Motivations 360°</button>
+    <button class="tab" onclick="App.goTab(3)"><span class="tab-badge"></span>Cible idéale</button>
+    <button class="tab" onclick="App.goTab(4)"><span class="tab-badge"></span>Capacités financières</button>
+    <button class="tab" onclick="App.goTab(5)"><span class="tab-badge"></span>Synthèse atelier</button>
+  </nav>
+
+  <!-- MODULE 0 : ACQUÉREUR -->
+  <section class="section visible" id="tab-0">
+    <div class="sec-header">
+      <div class="sec-title">Profil de l'acquéreur</div>
+      <div class="sec-desc">Identification et qualification du projet d'acquisition</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Identité</div>
+        <label>Nom / Raison sociale</label>
+        <div class="field-wrap"><input type="text" id="acq-nom" placeholder="Prénom Nom ou Société SA" oninput="App.syncProfileBar()"><span class="imported-tag" id="b-nom">Import</span></div>
+        <label>Type d'acquéreur</label>
+        <div class="tg">
+          <button class="tb" data-group="type" data-val="individuel" onclick="App.selType(this,'individuel')">Repreneur individuel</button>
+          <button class="tb" data-group="type" data-val="societe" onclick="App.selType(this,'societe')">Société acquéreuse</button>
+          <button class="tb" data-group="type" data-val="duo" onclick="App.selType(this,'duo')">Duo de repreneurs</button>
+        </div>
+        <label>Secteur d'activité actuel</label>
+        <div class="field-wrap"><input type="text" id="acq-secteur" placeholder="Ex : Industrie, Services B2B…"><span class="imported-tag" id="b-secteur">Import</span></div>
+        <label>Localisation</label>
+        <div class="field-wrap"><input type="text" id="acq-loc" placeholder="Ville, Région"><span class="imported-tag" id="b-loc">Import</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Contexte du projet</div>
+        <label>Intitulé du projet</label>
+        <div class="field-wrap"><input type="text" id="acq-projet" placeholder="Ex : Acquisition d'une PME industrielle…" oninput="App.syncProfileBar()"><span class="imported-tag" id="b-projet">Import</span></div>
+        <label>Genèse du projet</label>
+        <div class="field-wrap"><textarea id="acq-genese" placeholder="Comment ce projet est-il né ? Depuis combien de temps ?"></textarea><span class="imported-tag" id="b-genese">Import</span></div>
+        <label>Expérience M&A</label>
+        <div class="tg">
+          <button class="tb" data-group="exp" onclick="App.selUnique(this,'exp')">Première acquisition</button>
+          <button class="tb" data-group="exp" onclick="App.selUnique(this,'exp')">Expérimenté (1–2 ops)</button>
+          <button class="tb" data-group="exp" onclick="App.selUnique(this,'exp')">Serial acquéreur</button>
+        </div>
+        <label>Conseils déjà mobilisés</label>
+        <div class="tg">
+          <button class="tb" onclick="App.toggleMulti(this)">Avocat M&A</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Expert-comptable</button>
+          <button class="tb sel" onclick="App.toggleMulti(this)">Arcéane</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Banquier d'affaires</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Aucun</button>
+        </div>
+      </div>
+    </div>
+    <div class="ar"><button class="btn-p" onclick="App.goTab(1)">Module suivant →</button></div>
+  </section>
+
+  <!-- MODULE 1 : PERSONNALITÉ -->
+  <section class="section" id="tab-1">
+    <div class="sec-header">
+      <div class="sec-title">Personnalité du repreneur <span class="optional-badge">Optionnel</span></div>
+      <div class="sec-desc">Profil psychologique, aspirations, savoir-faire, rejets et ambitions. En mode duo, les deux colonnes sont affichées côte-à-côte dès la sélection du type "Duo" dans le module Acquéreur.</div>
+    </div>
+
+    <!-- SOLO -->
+    <div id="per-solo">
+      <div class="g2">
+        <div class="card">
+          <div class="per-section-title">Traits de personnalité</div>
+          <div class="trait-grid">
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Entrepreneur</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Stratège</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Bâtisseur</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Négociateur</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Opérationnel</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Analytique</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Leader naturel</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Persévérant</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Créateur de valeur</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Orienté résultats</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Fédérateur d'équipe</div>
+            <div class="trait-chip" onclick="this.classList.toggle('sel')">Visionnaire</div>
+          </div>
+          <div class="per-section-title">Profil fonctionnel dominant</div>
+          <div class="tg">
+            <button class="tb" onclick="App.toggleMulti(this)">Commercial / BizDev</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Opérations / Production</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Finance / Gestion</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Technique / Ingénierie</button>
+            <button class="tb" onclick="App.toggleMulti(this)">RH / Management</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Stratégie / M&A</button>
+          </div>
+          <div class="per-section-title">Rapport au risque & à l'action</div>
+          <div class="sw"><div class="sh"><span class="sl">Tolérance au risque financier</span><span class="sv" id="v-risque">6</span></div><input type="range" min="0" max="10" step="1" value="6" oninput="App.updateSlider(this,'v-risque')"></div>
+          <div class="sw"><div class="sh"><span class="sl">Goût pour l'opérationnel terrain</span><span class="sv" id="v-ope">7</span></div><input type="range" min="0" max="10" step="1" value="7" oninput="App.updateSlider(this,'v-ope')"></div>
+          <div class="sw"><div class="sh"><span class="sl">Appétit pour la transformation</span><span class="sv" id="v-transfo">5</span></div><input type="range" min="0" max="10" step="1" value="5" oninput="App.updateSlider(this,'v-transfo')"></div>
+          <div class="sw"><div class="sh"><span class="sl">Besoin d'autonomie décisionnelle</span><span class="sv" id="v-auto">8</span></div><input type="range" min="0" max="10" step="1" value="8" oninput="App.updateSlider(this,'v-auto')"></div>
+        </div>
+        <div class="card">
+          <div class="per-section-title">Aspirations & motivations profondes</div>
+          <div class="field-wrap"><textarea id="per-aspirations" placeholder="Ce qu'il cherche à accomplir, à vivre, à construire… Ex : diriger une équipe soudée, transformer une PME, laisser une empreinte sectorielle…"></textarea><span class="imported-tag" id="b-aspirations">Import</span></div>
+          <div class="per-section-title">Savoir-faire & compétences distinctives</div>
+          <div class="field-wrap"><textarea id="per-savoir-faire" placeholder="Domaines de maîtrise reconnus, expertises rares… Ex : restructuration opérationnelle, développement export, gestion de crise, finance structurée…"></textarea><span class="imported-tag" id="b-savoirfaire">Import</span></div>
+          <div class="per-section-title">Rejets & lignes rouges</div>
+          <div class="tg" style="margin-bottom:7px">
+            <button class="tb" onclick="App.toggleMulti(this)">Conflit social / syndicats</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Forte dépendance tech.</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Secteur en déclin structurel</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Très forte réglementation</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Cédant très présent post-cession</button>
+            <button class="tb" onclick="App.toggleMulti(this)">Client unique > 40% CA</button>
+          </div>
+          <div class="field-wrap"><textarea id="per-rejets" placeholder="Préciser librement : ce qu'il refuse absolument, secteurs, situations, modèles…" style="min-height:58px"></textarea><span class="imported-tag" id="b-rejets">Import</span></div>
+          <div class="per-section-title">Ambitions à 5–10 ans</div>
+          <div class="field-wrap"><textarea id="per-ambitions" placeholder="Vision long terme : revente après optimisation, croissance organique, transmission familiale, build-up, IPO…"></textarea><span class="imported-tag" id="b-ambitions">Import</span></div>
+          <div class="per-section-title">Contraintes & contexte de vie</div>
+          <textarea id="per-vie" placeholder="Contraintes personnelles, géographiques, familiales… Ex : rester en Bretagne, disponible à partir de sept., recherche associé de confiance…" style="min-height:54px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- DUO -->
+    <div id="per-duo" style="display:none">
+      <div class="duo-grid">
+        <!-- Repreneur 1 -->
+        <div class="duo-col">
+          <div class="duo-col-header"><span class="col-dot col-dot-1"></span>Repreneur principal</div>
+          <div class="card">
+            <div class="per-section-title">Traits de personnalité</div>
+            <div class="trait-grid">
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Entrepreneur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Stratège</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Bâtisseur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Négociateur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Opérationnel</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Analytique</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Leader naturel</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Persévérant</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Créateur de valeur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Orienté résultats</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Fédérateur d'équipe</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Visionnaire</div>
+            </div>
+            <div class="per-section-title">Profil fonctionnel</div>
+            <div class="tg"><button class="tb" onclick="App.toggleMulti(this)">Commercial</button><button class="tb" onclick="App.toggleMulti(this)">Opérations</button><button class="tb" onclick="App.toggleMulti(this)">Finance</button><button class="tb" onclick="App.toggleMulti(this)">Technique</button><button class="tb" onclick="App.toggleMulti(this)">RH</button><button class="tb" onclick="App.toggleMulti(this)">Stratégie</button></div>
+            <div class="per-section-title">Sliders psychologiques</div>
+            <div class="sw"><div class="sh"><span class="sl">Tolérance au risque</span><span class="sv" id="d1-risque">6</span></div><input type="range" min="0" max="10" step="1" value="6" oninput="App.updateSlider(this,'d1-risque')"></div>
+            <div class="sw"><div class="sh"><span class="sl">Goût de l'opérationnel</span><span class="sv" id="d1-ope">7</span></div><input type="range" min="0" max="10" step="1" value="7" oninput="App.updateSlider(this,'d1-ope')"></div>
+            <div class="sw"><div class="sh"><span class="sl">Appétit transformation</span><span class="sv" id="d1-transfo">5</span></div><input type="range" min="0" max="10" step="1" value="5" oninput="App.updateSlider(this,'d1-transfo')"></div>
+            <div class="sw"><div class="sh"><span class="sl">Besoin d'autonomie</span><span class="sv" id="d1-auto">8</span></div><input type="range" min="0" max="10" step="1" value="8" oninput="App.updateSlider(this,'d1-auto')"></div>
+          </div>
+          <div class="card">
+            <div class="per-section-title">Aspirations</div>
+            <textarea id="d1-aspirations" placeholder="Ce qu'il cherche à accomplir…" style="min-height:62px"></textarea>
+            <div class="per-section-title">Savoir-faire distinctif</div>
+            <textarea id="d1-savoir" placeholder="Expertises clés…" style="min-height:54px"></textarea>
+            <div class="per-section-title">Rejets & lignes rouges</div>
+            <textarea id="d1-rejets" placeholder="Refus absolus, contextes évités…" style="min-height:54px"></textarea>
+            <div class="per-section-title">Ambitions 5–10 ans</div>
+            <textarea id="d1-ambitions" placeholder="Vision long terme…" style="min-height:54px"></textarea>
+          </div>
+        </div>
+
+        <!-- Repreneur 2 -->
+        <div class="duo-col">
+          <div class="duo-col-header"><span class="col-dot col-dot-2"></span>Co-repreneur</div>
+          <div class="card">
+            <div class="per-section-title">Identité</div>
+            <div class="field-wrap"><input type="text" id="d2-nom" placeholder="Prénom Nom"><span class="imported-tag" id="b-conom">Import</span></div>
+            <label>Relation</label>
+            <div class="tg" style="margin-bottom:12px">
+              <button class="tb" data-group="corel" onclick="App.selUnique(this,'corel')">Associé professionnel</button>
+              <button class="tb" data-group="corel" onclick="App.selUnique(this,'corel')">Conjoint / famille</button>
+              <button class="tb" data-group="corel" onclick="App.selUnique(this,'corel')">Co-investisseur</button>
+              <button class="tb" data-group="corel" onclick="App.selUnique(this,'corel')">MBO management</button>
+            </div>
+            <div class="per-section-title">Traits de personnalité</div>
+            <div class="trait-grid">
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Entrepreneur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Stratège</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Bâtisseur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Négociateur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Opérationnel</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Analytique</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Leader naturel</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Persévérant</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Créateur de valeur</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Orienté résultats</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Fédérateur d'équipe</div>
+              <div class="trait-chip" onclick="this.classList.toggle('sel')">Visionnaire</div>
+            </div>
+            <div class="per-section-title">Profil fonctionnel</div>
+            <div class="tg"><button class="tb" onclick="App.toggleMulti(this)">Commercial</button><button class="tb" onclick="App.toggleMulti(this)">Opérations</button><button class="tb" onclick="App.toggleMulti(this)">Finance</button><button class="tb" onclick="App.toggleMulti(this)">Technique</button><button class="tb" onclick="App.toggleMulti(this)">RH</button><button class="tb" onclick="App.toggleMulti(this)">Stratégie</button></div>
+            <div class="per-section-title">Sliders psychologiques</div>
+            <div class="sw"><div class="sh"><span class="sl">Tolérance au risque</span><span class="sv" id="d2-risque">6</span></div><input type="range" min="0" max="10" step="1" value="6" oninput="App.updateSlider(this,'d2-risque')"></div>
+            <div class="sw"><div class="sh"><span class="sl">Goût de l'opérationnel</span><span class="sv" id="d2-ope">7</span></div><input type="range" min="0" max="10" step="1" value="7" oninput="App.updateSlider(this,'d2-ope')"></div>
+            <div class="sw"><div class="sh"><span class="sl">Appétit transformation</span><span class="sv" id="d2-transfo">5</span></div><input type="range" min="0" max="10" step="1" value="5" oninput="App.updateSlider(this,'d2-transfo')"></div>
+            <div class="sw"><div class="sh"><span class="sl">Besoin d'autonomie</span><span class="sv" id="d2-auto">8</span></div><input type="range" min="0" max="10" step="1" value="8" oninput="App.updateSlider(this,'d2-auto')"></div>
+          </div>
+          <div class="card">
+            <div class="per-section-title">Aspirations</div>
+            <div class="field-wrap"><textarea id="d2-aspirations" placeholder="Ce qu'il cherche à accomplir…" style="min-height:62px"></textarea><span class="imported-tag" id="b-coprofil">Import</span></div>
+            <div class="per-section-title">Savoir-faire distinctif</div>
+            <textarea id="d2-savoir" placeholder="Expertises clés, apport spécifique…" style="min-height:54px"></textarea>
+            <div class="per-section-title">Rejets & lignes rouges</div>
+            <textarea id="d2-rejets" placeholder="Refus absolus…" style="min-height:54px"></textarea>
+            <div class="per-section-title">Ambitions 5–10 ans</div>
+            <textarea id="d2-ambitions" placeholder="Vision long terme…" style="min-height:54px"></textarea>
+          </div>
+          <div class="card card-gold">
+            <div class="per-section-title">Gouvernance du duo</div>
+            <label>Répartition des rôles envisagée</label>
+            <div class="tg" style="flex-direction:column;gap:5px;margin-bottom:12px">
+              <button class="tb full" data-group="roles" onclick="App.selUnique(this,'roles')">Président / DG + DGA opérationnel</button>
+              <button class="tb full" data-group="roles" onclick="App.selUnique(this,'roles')">Stratégie / Finance + Opérations / Commercial</button>
+              <button class="tb full" data-group="roles" onclick="App.selUnique(this,'roles')">Développement + Production / Technique</button>
+              <button class="tb full" data-group="roles" onclick="App.selUnique(this,'roles')">À définir post-acquisition</button>
+            </div>
+            <label>Points de vigilance — gouvernance</label>
+            <textarea id="duo-vigilance" placeholder="Divergences potentielles : horizon de sortie, vision stratégique, partage des décisions, pacte d'associés à prévoir…" style="min-height:72px"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar">
+      <button class="btn-g" onclick="App.goTab(0)">← Retour</button>
+      <button class="btn-p" onclick="App.goTab(2)">Module suivant →</button>
+    </div>
+  </section>
+
+  <!-- MODULE 2 : MOTIVATIONS 360° -->
+  <section class="section" id="tab-2">
+    <div class="sec-header">
+      <div class="sec-title">Motivations 360°</div>
+      <div class="sec-desc">Analyse des ressorts stratégiques et personnels de l'acquisition</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Leviers stratégiques — pondérez de 0 à 10</div>
+      <div class="sw"><div class="sh"><span class="sl">Croissance CA / parts de marché</span><span class="sv" id="v-ca">7</span></div><input type="range" min="0" max="10" step="1" value="7" oninput="App.updateSlider(this,'v-ca')"></div>
+      <div class="sw"><div class="sh"><span class="sl">Acquisition de compétences / savoir-faire</span><span class="sv" id="v-comp">6</span></div><input type="range" min="0" max="10" step="1" value="6" oninput="App.updateSlider(this,'v-comp')"></div>
+      <div class="sw"><div class="sh"><span class="sl">Intégration verticale (amont / aval)</span><span class="sv" id="v-integ">4</span></div><input type="range" min="0" max="10" step="1" value="4" oninput="App.updateSlider(this,'v-integ')"></div>
+      <div class="sw"><div class="sh"><span class="sl">Diversification sectorielle</span><span class="sv" id="v-div">5</span></div><input type="range" min="0" max="10" step="1" value="5" oninput="App.updateSlider(this,'v-div')"></div>
+      <div class="sw"><div class="sh"><span class="sl">Consolidation / élimination concurrent</span><span class="sv" id="v-conso">3</span></div><input type="range" min="0" max="10" step="1" value="3" oninput="App.updateSlider(this,'v-conso')"></div>
+      <div class="sw"><div class="sh"><span class="sl">Effet de levier financier / rentabilité</span><span class="sv" id="v-lev">6</span></div><input type="range" min="0" max="10" step="1" value="6" oninput="App.updateSlider(this,'v-lev')"></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Motivations personnelles</div>
+        <div class="tg" style="flex-direction:column;gap:5px">
+          <button class="tb full" data-mot="Indépendance" onclick="App.toggleMulti(this)">Devenir chef d'entreprise / indépendance</button>
+          <button class="tb full" data-mot="Transmission" onclick="App.toggleMulti(this)">Transmission familiale</button>
+          <button class="tb full" data-mot="Reconversion" onclick="App.toggleMulti(this)">Retraite anticipée / reconversion</button>
+          <button class="tb full" data-mot="Patrimoine" onclick="App.toggleMulti(this)">Investissement patrimonial</button>
+          <button class="tb full" data-mot="Passion" onclick="App.toggleMulti(this)">Passion sectorielle</button>
+        </div>
+        <label style="margin-top:.75rem">Contraintes géographiques</label>
+        <div class="field-wrap"><input type="text" id="mot-geo" placeholder="Ex : Dans un rayon de 150 km, région PACA…"><span class="imported-tag" id="b-geo">Import</span></div>
+        <label>Délai souhaité</label>
+        <div class="tg">
+          <button class="tb" data-group="delai" onclick="App.selUnique(this,'delai')">– de 6 mois</button>
+          <button class="tb sel" data-group="delai" onclick="App.selUnique(this,'delai')">6 à 12 mois</button>
+          <button class="tb" data-group="delai" onclick="App.selUnique(this,'delai')">12 à 24 mois</button>
+          <button class="tb" data-group="delai" onclick="App.selUnique(this,'delai')">+ de 24 mois</button>
+        </div>
+        <label>Facteurs bloquants identifiés</label>
+        <div class="field-wrap"><textarea id="mot-bloquants" placeholder="Ex : Déménagement impossible, concurrence d'un associé…"></textarea><span class="imported-tag" id="b-bloquants">Import</span></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="card-title" style="width:100%">Radar des motivations</div>
+        <canvas id="radarCanvas" width="200" height="200"></canvas>
+      </div>
+    </div>
+    <div class="ar">
+      <button class="btn-g" onclick="App.goTab(1)">← Retour</button>
+      <button class="btn-p" onclick="App.goTab(3)">Module suivant →</button>
+    </div>
+  </section>
+
+  <!-- MODULE 3 : CIBLE IDÉALE -->
+  <section class="section" id="tab-3">
+    <div class="sec-header">
+      <div class="sec-title">Définition de la cible idéale</div>
+      <div class="sec-desc">Construction du profil de cible et critères de sélection pondérés</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Secteurs & activités</div>
+        <label>Secteurs prioritaires</label>
+        <div class="field-wrap"><input type="text" id="cib-sect" placeholder="Ex : Industrie métallurgie, maintenance industrielle…"><span class="imported-tag" id="b-cibsect">Import</span></div>
+        <label>Secteurs exclus</label>
+        <div class="field-wrap"><input type="text" id="cib-excl" placeholder="Ex : Restauration, activités à risque réglementaire…"><span class="imported-tag" id="b-cibexcl">Import</span></div>
+        <label>Modèle économique</label>
+        <div class="tg">
+          <button class="tb" onclick="App.toggleMulti(this)">B2B</button>
+          <button class="tb" onclick="App.toggleMulti(this)">B2C</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Récurrent / abonnements</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Projets / affaires</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Distribution</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Industrie / production</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Géographie & taille</div>
+        <label>Zone géographique</label>
+        <div class="field-wrap"><input type="text" id="cib-zone" placeholder="Ex : France entière, Grand Est…"><span class="imported-tag" id="b-cibzone">Import</span></div>
+        <label>Effectif cible</label>
+        <div class="tg">
+          <button class="tb" data-group="eff" onclick="App.selUnique(this,'eff')">1–10</button>
+          <button class="tb" data-group="eff" onclick="App.selUnique(this,'eff')">10–50</button>
+          <button class="tb sel" data-group="eff" onclick="App.selUnique(this,'eff')">50–250</button>
+          <button class="tb" data-group="eff" onclick="App.selUnique(this,'eff')">250+</button>
+        </div>
+        <label>CA cible (M€)</label>
+        <div style="display:flex;gap:8px">
+          <div class="field-wrap" style="flex:1;margin-bottom:0"><input type="number" id="cib-ca-min" placeholder="Min" style="margin-bottom:0"><span class="imported-tag" id="b-camin">Import</span></div>
+          <div class="field-wrap" style="flex:1;margin-bottom:0"><input type="number" id="cib-ca-max" placeholder="Max" style="margin-bottom:0"><span class="imported-tag" id="b-camax">Import</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Critères de sélection prioritaires</div>
+      <ul class="cl">
+        <li class="ci"><span class="cr">1</span><span class="ct">Rentabilité (EBITDA > seuil défini)</span><span class="cw">8/10</span></li>
+        <li class="ci"><span class="cr">2</span><span class="ct">Visibilité / récurrence du CA</span><span class="cw">7/10</span></li>
+        <li class="ci"><span class="cr">3</span><span class="ct">Solidité du management en place</span><span class="cw">7/10</span></li>
+        <li class="ci"><span class="cr">4</span><span class="ct">Absence de dépendance client (< 30%)</span><span class="cw">6/10</span></li>
+        <li class="ci"><span class="cr">5</span><span class="ct">Cédant non opérationnel / transition planifiée</span><span class="cw">6/10</span></li>
+        <li class="ci"><span class="cr">6</span><span class="ct">Potentiel de synergies identifiables</span><span class="cw">5/10</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Profil du cédant recherché</div>
+      <div class="tg">
+        <button class="tb" onclick="App.toggleMulti(this)">Dirigeant-fondateur retraite</button>
+        <button class="tb" onclick="App.toggleMulti(this)">Groupe cédant une filiale</button>
+        <button class="tb" onclick="App.toggleMulti(this)">Actionnariat successoral</button>
+        <button class="tb" onclick="App.toggleMulti(this)">Build-up PE</button>
+        <button class="tb" onclick="App.toggleMulti(this)">Carve-out industriel</button>
+      </div>
+    </div>
+    <div class="ar">
+      <button class="btn-g" onclick="App.goTab(2)">← Retour</button>
+      <button class="btn-p" onclick="App.goTab(4)">Module suivant →</button>
+    </div>
+  </section>
+
+  <!-- MODULE 4 : FINANCIER -->
+  <section class="section" id="tab-4">
+    <div class="sec-header">
+      <div class="sec-title">Capacités financières & structure d'acquisition</div>
+      <div class="sec-desc">Enveloppe budgétaire, effet de levier et critères de rentabilité attendus</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Enveloppe d'acquisition</div>
+        <label>Apport en fonds propres disponibles (k€)</label>
+        <div class="field-wrap"><input type="number" id="fin-apport" placeholder="Ex : 2 000" oninput="App.calcFin()"><span class="imported-tag" id="b-apport">Import</span></div>
+        <label>Levier bancaire envisagé</label>
+        <div class="tg">
+          <button class="tb" data-group="lev" onclick="App.selLev(this,'x2')">×2 (LTV 50%)</button>
+          <button class="tb sel" data-group="lev" onclick="App.selLev(this,'x3')">×3 (LTV 67%)</button>
+          <button class="tb" data-group="lev" onclick="App.selLev(this,'x4')">×4 (LTV 75%)</button>
+          <button class="tb" data-group="lev" onclick="App.selLev(this,'x5')">×5 (LTV 80%)</button>
+        </div>
+        <label>Earn-out / complément de prix</label>
+        <div class="tg">
+          <button class="tb" data-group="eo" onclick="App.selUnique(this,'eo')">Oui, sous conditions</button>
+          <button class="tb" data-group="eo" onclick="App.selUnique(this,'eo')">Non</button>
+          <button class="tb sel" data-group="eo" onclick="App.selUnique(this,'eo')">À étudier</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Simulation enveloppe</div>
+        <div class="mc-grid">
+          <div class="mc"><div class="mc-label">Fonds propres</div><div class="mc-val" id="fin-fp">—</div></div>
+          <div class="mc"><div class="mc-label">Dette senior</div><div class="mc-val" id="fin-dette">—</div></div>
+          <div class="mc mc-full"><div class="mc-label">Enveloppe totale indicative</div><div class="mc-val gold" id="fin-total">—</div></div>
+        </div>
+        <div class="alert a-info" id="fin-alert">Renseignez l'apport pour calculer l'enveloppe.</div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Critères de rentabilité</div>
+        <div class="sw"><div class="sh"><span class="sl">EBITDA minimum acceptable (%)</span><span class="sv" id="v-ebitda">10</span></div><input type="range" min="5" max="30" step="1" value="10" oninput="App.updateSlider(this,'v-ebitda')"></div>
+        <div class="sw"><div class="sh"><span class="sl">Multiple EV/EBITDA max (×)</span><span class="sv" id="v-mult">6</span></div><input type="range" min="3" max="12" step="0.5" value="6" oninput="App.updateSlider(this,'v-mult')"></div>
+        <div class="sw"><div class="sh"><span class="sl">TRI cible (%)</span><span class="sv" id="v-tri">15</span></div><input type="range" min="8" max="35" step="1" value="15" oninput="App.updateSlider(this,'v-tri')"></div>
+        <div class="sw"><div class="sh"><span class="sl">Horizon de détention (années)</span><span class="sv" id="v-horizon">5</span></div><input type="range" min="2" max="15" step="1" value="5" oninput="App.updateSlider(this,'v-horizon')"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Structure juridique envisagée</div>
+        <div class="tg" style="flex-direction:column;gap:5px">
+          <button class="tb full" data-group="struct" onclick="App.selUnique(this,'struct')">Holding patrimoniale (SAS / SARL)</button>
+          <button class="tb full sel" data-group="struct" onclick="App.selUnique(this,'struct')">LBO / holding de reprise</button>
+          <button class="tb full" data-group="struct" onclick="App.selUnique(this,'struct')">Acquisition directe par la société</button>
+          <button class="tb full" data-group="struct" onclick="App.selUnique(this,'struct')">Fonds dédié / club deal</button>
+          <button class="tb full" data-group="struct" onclick="App.selUnique(this,'struct')">À définir avec les conseils</button>
+        </div>
+        <label style="margin-top:.75rem">Cofinancement envisagé</label>
+        <div class="tg">
+          <button class="tb" onclick="App.toggleMulti(this)">Co-investisseurs</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Management (MBO)</button>
+          <button class="tb" onclick="App.toggleMulti(this)">BPI / Région</button>
+          <button class="tb" onclick="App.toggleMulti(this)">Mezzanine</button>
+        </div>
+      </div>
+    </div>
+    <div class="ar">
+      <button class="btn-g" onclick="App.goTab(3)">← Retour</button>
+      <button class="btn-p" onclick="App.goTab(5)">Générer la synthèse →</button>
+    </div>
+  </section>
+
+  <!-- MODULE 5 : SYNTHÈSE -->
+  <section class="section" id="tab-5">
+    <div class="sec-header">
+      <div class="sec-title">Synthèse de l'atelier de cadrage</div>
+      <div class="sec-desc">Fiche de mission générée par IA — à valider et signer en fin de session</div>
+    </div>
+    <div class="syn-header">
+      <h3>Fiche de mission — Arcéane</h3>
+      <p id="syn-text">Génération en cours…</p>
+      <div class="syn-metrics">
+        <div><div class="sm-val" id="syn-env">—</div><div class="sm-lbl">Enveloppe max.</div></div>
+        <div><div class="sm-val" id="syn-horizon">5 ans</div><div class="sm-lbl">Horizon</div></div>
+        <div><div class="sm-val" id="syn-tri">15%</div><div class="sm-lbl">TRI cible</div></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Profil cible consolidé</div>
+        <div id="syn-tags" style="margin-bottom:10px"><span class="tag tag-s">Secteur à définir</span><span class="tag tag-g">Zone à définir</span></div>
+        <div style="font-size:12px;color:var(--text-s);line-height:1.8" id="syn-cib-detail">—</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Top 3 motivations stratégiques</div>
+        <ul class="cl" id="syn-mots"><li class="ci" style="color:var(--text-t);font-size:12px">À compléter via le module Motivations 360°</li></ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Profil personnalité — synthèse</div>
+      <div style="font-size:12px;color:var(--text-s);line-height:1.8" id="syn-per">Module personnalité non renseigné.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Prochaines étapes recommandées</div>
+      <ul class="cl">
+        <li class="ci"><span class="cr">1</span><span class="ct">Validation et signature de la fiche de mission par l'acquéreur</span></li>
+        <li class="ci"><span class="cr">2</span><span class="ct">Activation du sourcing confidentiel (approche propriétaire + intermédiaires)</span></li>
+        <li class="ci"><span class="cr">3</span><span class="ct">Mise en place du comité d'analyse et grille de scoring des cibles</span></li>
+        <li class="ci"><span class="cr">4</span><span class="ct">Coordination avec les conseils juridiques et financiers</span></li>
+        <li class="ci"><span class="cr">5</span><span class="ct">Premier point d'avancement à J+30</span></li>
+      </ul>
+    </div>
+    <div class="alert a-ok">Atelier de cadrage réalisé par <strong>Arcéane</strong> — © CO-JAK. Document confidentiel destiné à l'acquéreur et à ses conseils mandatés.</div>
+    <div class="ar">
+      <button class="btn-g" onclick="App.goTab(4)">← Retour</button>
+      <button class="btn-p" onclick="Synthese.build()">Régénérer ↺</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="config.js" onerror="console.warn('config.js manquant — copiez config.example.js')"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
+<script src="js/import.js"></script>
+<script src="js/synthese.js"></script>
+<script>
+(function init() {
+  AI.refreshKeyStatus();
+
+  window.showKeyModal = function() {
+    document.getElementById('key-modal').style.display = 'flex';
+    document.getElementById('key-error').textContent = '';
+    setTimeout(() => document.getElementById('key-input').focus(), 50);
+  };
+
+  // Override selType to handle duo layout
+  const _origSelType = App.selType.bind(App);
+  App.selType = function(btn, val) {
+    _origSelType(btn, val);
+    const isDuo = val === 'duo';
+    document.getElementById('per-solo').style.display = isDuo ? 'none' : '';
+    document.getElementById('per-duo').style.display = isDuo ? '' : 'none';
+    App.state.repCount = isDuo ? 2 : 1;
+  };
+
+  setTimeout(App.drawRadar, 150);
+})();
+</script>
+</body>
+</html>
