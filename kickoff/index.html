@@ -10,7 +10,7 @@
 <div id="app">
 
   <!-- KEY MODAL -->
-  <div class="key-modal-overlay" id="key-modal">
+  <div class="key-modal-overlay" id="key-modal" onclick="if(event.target===this){this.classList.remove('open');document.getElementById('key-error').textContent='';}">
     <div class="key-modal">
       <h3>Clé API OpenAI requise</h3>
       <p>L'analyse IA (extraction de fiche et synthèse narrative) nécessite une clé API OpenAI. Elle est sauvegardée uniquement dans votre navigateur — jamais transmise à un serveur tiers.</p>
@@ -556,7 +556,7 @@
   AI.refreshKeyStatus();
 
   window.showKeyModal = function() {
-    document.getElementById('key-modal').style.display = 'flex';
+    document.getElementById('key-modal').classList.add('open');
     document.getElementById('key-error').textContent = '';
     setTimeout(() => document.getElementById('key-input').focus(), 50);
   };
