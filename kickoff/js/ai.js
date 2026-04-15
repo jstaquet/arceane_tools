@@ -34,7 +34,7 @@ const AI = (() => {
   function promptForKey() {
     return new Promise((resolve, reject) => {
       const modal = document.getElementById('key-modal');
-      modal.style.display = 'flex';
+      modal.classList.add('open');
       document.getElementById('key-input').value = '';
       document.getElementById('key-error').textContent = '';
       document.getElementById('key-input').focus();
@@ -47,13 +47,13 @@ const AI = (() => {
         }
         saveKey(val);
         refreshKeyStatus();
-        modal.style.display = 'none';
+        modal.classList.remove('open');
         cleanup();
         resolve(val);
       };
 
       const onCancel = () => {
-        modal.style.display = 'none';
+        modal.classList.remove('open');
         cleanup();
         reject(new Error('Clé API non renseignée. L\'analyse IA ne peut pas démarrer.'));
       };
