@@ -44,7 +44,7 @@ body {
 }
 
 /* ─── LAYOUT ─── */
-#app { display: flex; flex-direction: column; min-height: 100vh; }
+#app { display: flex; flex-direction: column; min-height: 100vh; position: relative; }
 
 .top-bar {
   display: flex; align-items: center; justify-content: space-between;
@@ -365,7 +365,11 @@ canvas { display: block; }
 
 /* ─── API KEY MODAL ─── */
 .key-modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 1000;
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  min-height: 100%;
+  z-index: 1000;
   background: rgba(0,0,0,0.75);
   align-items: center; justify-content: center;
 }
