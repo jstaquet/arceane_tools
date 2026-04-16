@@ -1,0 +1,2506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil Repreneur — Diagnostic Stratégique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --ivory: #F7F3EE;
+  --ivory2: #EDE8E1;
+  --ivory3: #E3DDD5;
+  --ink: #1C1917;
+  --ink2: #3D3830;
+  --ink3: #6B6358;
+  --ink4: #9B9189;
+  --accent: #8B3A2A;
+  --accent2: #B85C3E;
+  --accent-dim: rgba(139,58,42,0.10);
+  --gold: #A07840;
+  --gold-dim: rgba(160,120,64,0.12);
+  --border: rgba(28,25,23,0.10);
+  --border2: rgba(28,25,23,0.18);
+  --green: #4A7C59;
+  --blue: #3B5F8A;
+  --r: 10px;
+  --shadow: 0 2px 24px rgba(28,25,23,0.07);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════ */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ═══════════════════════════════════════════
+   WELCOME
+═══════════════════════════════════════════ */
+#screen-welcome {
+  background:
+    radial-gradient(ellipse 600px 400px at 90% 10%, rgba(139,58,42,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 600px at 5% 80%, rgba(160,120,64,0.04) 0%, transparent 60%),
+    var(--ivory);
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+}
+
+.welcome-wrap { max-width: 660px; width: 100%; }
+
+.w-eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.w-eyebrow::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.w-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+  font-weight: 300;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+}
+.w-title em { font-style: italic; color: var(--accent); }
+
+.w-lead {
+  font-size: 1rem;
+  color: var(--ink3);
+  line-height: 1.75;
+  max-width: 520px;
+  margin-bottom: 2.5rem;
+}
+
+.w-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 2.5rem;
+}
+
+.w-pillar {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.w-pillar-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.5;
+  font-weight: 300;
+}
+
+.w-pillar-label {
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.4;
+  font-weight: 400;
+  margin-top: 3px;
+}
+
+.api-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.api-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.api-status {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink4);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.api-status.ok { background: var(--green); }
+
+.api-lbl { font-size: 13px; color: var(--ink3); flex: 1; }
+
+.api-input-wrap { display: flex; gap: 8px; margin-bottom: 0.75rem; }
+
+.api-input {
+  flex: 1;
+  background: var(--ivory);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 9px 13px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.api-input:focus { border-color: var(--accent); }
+
+.api-note { font-size: 11px; color: var(--ink4); line-height: 1.5; }
+
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--ink);
+  color: var(--ivory);
+  border: none;
+  border-radius: 9px;
+  padding: 15px 32px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-bottom: 1rem;
+}
+.btn-cta:hover { background: var(--ink2); }
+.btn-cta:active { transform: scale(0.98); }
+.btn-cta .arrow { font-size: 18px; transition: transform 0.2s; }
+.btn-cta:hover .arrow { transform: translateX(4px); }
+
+.w-meta { font-size: 11.5px; color: var(--ink4); letter-spacing: 0.04em; }
+
+/* ═══════════════════════════════════════════
+   QUIZ
+═══════════════════════════════════════════ */
+#screen-quiz { background: var(--ivory); }
+
+.quiz-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247,243,238,0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+}
+
+.quiz-header-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.quiz-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  color: var(--ink3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.progress-track {
+  flex: 1;
+  height: 2px;
+  background: var(--ivory3);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+}
+
+.progress-count {
+  font-size: 12px;
+  color: var(--ink4);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.quiz-body {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 2rem 5rem;
+}
+
+.quiz-inner { max-width: 700px; width: 100%; }
+
+/* Module banner */
+.module-banner {
+  display: none;
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.4s ease;
+}
+.module-banner.visible { display: block; }
+
+.mb-num {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.mb-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.mb-sub { font-size: 13px; color: var(--ink3); }
+
+/* Question card */
+.q-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2.25rem 2.5rem;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.q-tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 1rem;
+}
+
+.q-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-bottom: 1.75rem;
+}
+
+/* Choices */
+.choices { display: flex; flex-direction: column; gap: 9px; }
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  background: var(--ivory);
+  border: 1.5px solid transparent;
+  border-radius: 9px;
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.5;
+  width: 100%;
+}
+.choice:hover { background: white; border-color: var(--border2); color: var(--ink); }
+.choice.sel { background: white; border-color: var(--accent); color: var(--ink); }
+
+.choice-bullet {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink4);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.choice.sel .choice-bullet {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.choice.sel .choice-bullet::after {
+  content: '';
+  display: block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Free text input under choice */
+.free-input {
+  width: 100%;
+  background: var(--ivory);
+  border: 1.5px solid var(--accent);
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+  animation: fadeUp 0.2s ease;
+}
+.free-input:focus { background: white; }
+
+/* Checkbox bullet for multi */
+.choice-checkbox {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--ink4);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.choice.sel .choice-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.choice.sel .choice-checkbox::after {
+  content: '';
+  display: block;
+  width: 10px; height: 6px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.q-hint {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.q-hint::before {
+  content: '';
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--ink4);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Scale */
+.scale-container { padding: 0.25rem 0 0.5rem; }
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink3);
+  margin-bottom: 1.5rem;
+  gap: 16px;
+}
+.scale-labels span { max-width: 45%; line-height: 1.4; }
+.scale-labels span:last-child { text-align: right; }
+
+.scale-track {
+  position: relative;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.scale-line {
+  height: 2px;
+  background: var(--ivory3);
+  border-radius: 100px;
+  position: relative;
+}
+
+.scale-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.1s;
+}
+
+.scale-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.scale-tick {
+  width: 1px;
+  height: 5px;
+  background: var(--ivory3);
+}
+
+.scale-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 8px rgba(139,58,42,0.25);
+  transition: transform 0.1s, left 0.1s;
+  cursor: grab;
+  z-index: 2;
+}
+.scale-thumb:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.15); }
+
+input[type=range].scale-native {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: transparent;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.scale-value {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin-top: 12px;
+  opacity: 0.8;
+}
+
+/* Text input */
+.text-input {
+  width: 100%;
+  background: var(--ivory);
+  border: 1.5px solid var(--border2);
+  border-radius: 9px;
+  padding: 12px 16px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+.text-input:focus { border-color: var(--accent); background: white; }
+
+/* Quiz nav */
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-back:hover { background: white; color: var(--ink); }
+.btn-back:disabled { opacity: 0.3; cursor: default; }
+
+.btn-next {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-next:hover { background: var(--accent2); }
+.btn-next:active { transform: scale(0.98); }
+.btn-next:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
+/* Module nav dots */
+.module-nav {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.m-dot {
+  height: 4px;
+  border-radius: 100px;
+  transition: all 0.3s;
+  background: var(--ivory3);
+  width: 24px;
+}
+.m-dot.done { background: var(--accent); opacity: 0.5; width: 16px; }
+.m-dot.active { background: var(--accent); width: 40px; }
+
+/* ═══════════════════════════════════════════
+   LOADING
+═══════════════════════════════════════════ */
+#screen-loading {
+  align-items: center;
+  justify-content: center;
+  background: var(--ivory);
+}
+
+.loading-inner { text-align: center; max-width: 360px; }
+
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 2px solid var(--ivory3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 0.75rem;
+}
+
+.loading-sub { font-size: 13px; color: var(--ink3); }
+
+.loading-steps {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loading-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink4);
+  opacity: 0.4;
+  transition: opacity 0.4s;
+}
+.loading-step.active { opacity: 1; color: var(--ink3); }
+.loading-step.done { opacity: 0.6; }
+
+.step-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--ivory3);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.loading-step.active .step-dot { background: var(--accent); }
+.loading-step.done .step-dot { background: var(--green); }
+
+/* ═══════════════════════════════════════════
+   RESULTS
+═══════════════════════════════════════════ */
+#screen-results {
+  background:
+    radial-gradient(ellipse 500px 300px at 100% 0%, rgba(139,58,42,0.04) 0%, transparent 60%),
+    var(--ivory);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+#screen-results.revealed { opacity: 1; transform: none; }
+
+.results-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem;
+  width: 100%;
+}
+
+/* Hero */
+.r-hero {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 3rem;
+  margin-bottom: 3rem;
+}
+
+.r-eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.r-eyebrow::before { content: ''; display: block; width: 28px; height: 1px; background: var(--accent); }
+
+.r-type {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-weight: 300;
+  line-height: 1.12;
+  margin-bottom: 0.75rem;
+}
+
+.r-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+}
+
+.r-desc {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink3);
+  max-width: 600px;
+}
+
+/* Viz section */
+.r-viz {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+  align-items: center;
+}
+
+@media (max-width: 680px) { .r-viz { grid-template-columns: 1fr; } }
+
+.r-radar-wrap {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.r-scores { }
+
+.r-scores-title {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.score-row-label {
+  font-size: 13px;
+  color: var(--ink3);
+  width: 175px;
+  flex-shrink: 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--ivory3);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1.2s cubic-bezier(.4,0,.2,1);
+}
+
+.score-num {
+  font-size: 12px;
+  color: var(--ink4);
+  width: 30px;
+  text-align: right;
+}
+
+/* Section */
+.r-section { margin-bottom: 3rem; }
+
+.r-section-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 1.75rem;
+}
+
+.r-section-line { flex: 1; height: 1px; background: var(--border); }
+
+.r-section-title {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  white-space: nowrap;
+}
+
+/* AI analysis */
+.ai-block {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem 2.25rem;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-block::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+}
+
+.ai-loading-msg {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--ink3);
+}
+
+.ai-mini-spin {
+  width: 16px; height: 16px;
+  border: 2px solid var(--ivory3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.ai-text p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink3);
+  margin-bottom: 1.1rem;
+}
+.ai-text p:last-child { margin-bottom: 0; }
+
+.ai-error {
+  font-size: 13px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-no-key {
+  font-size: 14px;
+  color: var(--ink4);
+  font-style: italic;
+}
+
+/* Forces grid */
+.forces-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 0;
+}
+@media (max-width: 620px) { .forces-grid { grid-template-columns: 1fr; } }
+
+.force-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s;
+}
+.force-card:hover { border-color: var(--border2); }
+
+.force-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.force-rank {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--accent);
+  opacity: 0.35;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.force-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  flex: 1;
+  line-height: 1.3;
+}
+
+.force-score {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+
+.force-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.55; }
+
+/* Profile forces */
+.profile-forces {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-force {
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  padding: 1rem 1.25rem;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pf-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.pf-text { font-size: 13px; color: var(--ink3); line-height: 1.55; }
+
+/* Fit signals */
+.fit-block {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--shadow);
+}
+
+.fit-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 0.75rem;
+}
+
+.fit-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.fit-ok { color: var(--ink3); }
+.fit-watch { color: var(--ink3); }
+
+.fit-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.fit-ok .fit-icon { color: var(--green); }
+.fit-watch .fit-icon { color: var(--gold); }
+
+.fit-summary {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* Priorities — keep for backwards compat but unused in new flow */
+.priorities { display: flex; flex-direction: column; gap: 14px; }
+
+.priority-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  gap: 1.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow);
+}
+.priority-card:hover { border-color: var(--border2); box-shadow: 0 4px 32px rgba(28,25,23,0.1); }
+
+.p-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: var(--accent);
+  opacity: 0.3;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.p-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.p-actions { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+
+.p-actions li {
+  display: flex;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+.p-dot {
+  color: var(--accent);
+  font-size: 8px;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+/* Strengths grid */
+.strengths-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 540px) { .strengths-grid { grid-template-columns: 1fr; } }
+
+.strength-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.strength-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.strength-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.strength-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.strength-text { font-size: 12.5px; color: var(--ink3); line-height: 1.5; }
+
+/* Context recap */
+.context-recap {
+  background: var(--ivory2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.ctx-item { font-size: 13px; color: var(--ink3); }
+.ctx-item strong { color: var(--ink2); font-weight: 500; }
+
+/* Actions footer */
+.r-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn-pdf {
+  background: var(--ink);
+  color: var(--ivory);
+  border: none;
+  border-radius: 9px;
+  padding: 12px 24px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.btn-pdf:hover { background: var(--ink2); }
+
+.btn-restart {
+  background: transparent;
+  color: var(--ink3);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 12px 20px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-restart:hover { background: white; color: var(--ink); }
+
+.r-date { font-size: 11px; color: var(--ink4); margin-top: 1.5rem; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 540px) {
+  .w-pillars { grid-template-columns: repeat(2, 1fr); }
+  .q-card { padding: 1.5rem 1.25rem; }
+  .results-wrap { padding: 2rem 1.25rem 4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1 — WELCOME
+══════════════════════════════════════════ -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-wrap">
+    <div class="w-eyebrow">Diagnostic stratégique</div>
+    <h1 class="w-title">
+      Quel repreneur<br>
+      êtes-vous <em>vraiment</em> ?
+    </h1>
+    <p class="w-lead">
+      Un diagnostic approfondi en 60 questions pour identifier vos forces distinctives,
+      vos ressorts profonds et les points de vigilance critiques dans votre projet
+      de reprise d'entreprise.
+    </p>
+
+    <div class="w-pillars">
+      <div class="w-pillar"><span class="w-pillar-num">01</span><span class="w-pillar-label">Leadership &amp; style décisionnel</span></div>
+      <div class="w-pillar"><span class="w-pillar-num">02</span><span class="w-pillar-label">Motivations &amp; aspirations</span></div>
+      <div class="w-pillar"><span class="w-pillar-num">03</span><span class="w-pillar-label">Résilience sous pression</span></div>
+      <div class="w-pillar"><span class="w-pillar-num">04</span><span class="w-pillar-label">Intelligence relationnelle</span></div>
+      <div class="w-pillar"><span class="w-pillar-num">05</span><span class="w-pillar-label">Vision stratégique</span></div>
+      <div class="w-pillar"><span class="w-pillar-num">06</span><span class="w-pillar-label">Rigueur opérationnelle</span></div>
+    </div>
+
+    <div class="api-box">
+      <div class="api-row">
+        <div class="api-status" id="api-dot"></div>
+        <span class="api-lbl" id="api-lbl">Clé OpenAI pour l'analyse IA personnalisée</span>
+      </div>
+      <div class="api-input-wrap" id="api-input-wrap">
+        <input type="password" id="api-key-input" class="api-input" placeholder="sk-proj-…">
+        <button class="btn-back" onclick="saveKey()" style="white-space:nowrap">Enregistrer</button>
+      </div>
+      <div id="api-saved-row" style="display:none; margin-bottom:0.75rem">
+        <button class="btn-back" onclick="clearKey()" style="font-size:12px">Modifier la clé</button>
+      </div>
+      <p class="api-note">Stockée uniquement dans votre navigateur (localStorage). L'analyse IA est optionnelle — le rapport PDF s'génère dans tous les cas.</p>
+    </div>
+
+    <button class="btn-cta" onclick="startQuiz()">
+      Démarrer le diagnostic
+      <span class="arrow">→</span>
+    </button>
+    <div class="w-meta">~45 min · 60 questions · Rapport PDF inclus</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2 — QUIZ
+══════════════════════════════════════════ -->
+<div id="screen-quiz" class="screen">
+  <header class="quiz-header">
+    <div class="quiz-header-inner">
+      <div class="quiz-logo">Profil Repreneur</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-count" id="progress-count">1 / 60</div>
+    </div>
+  </header>
+
+  <div class="quiz-body">
+    <div class="quiz-inner">
+      <div class="module-nav" id="module-nav"></div>
+      <div class="module-banner" id="module-banner">
+        <div class="mb-num" id="mb-num"></div>
+        <div class="mb-title" id="mb-title"></div>
+        <div class="mb-sub" id="mb-sub"></div>
+      </div>
+      <div class="q-card" id="q-card">
+        <div class="q-tag" id="q-tag"></div>
+        <p class="q-text" id="q-text"></p>
+        <div id="q-input-zone"></div>
+      </div>
+      <div class="quiz-nav">
+        <button class="btn-back" id="btn-back" onclick="goBack()">← Précédent</button>
+        <button class="btn-next" id="btn-next" onclick="goNext()" disabled>
+          Suivant <span>→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 3 — LOADING
+══════════════════════════════════════════ -->
+<div id="screen-loading" class="screen">
+  <div class="loading-inner">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Analyse en cours…</div>
+    <p class="loading-sub">Nous construisons votre profil personnalisé</p>
+    <div class="loading-steps" id="loading-steps">
+      <div class="loading-step active" id="ls-1"><div class="step-dot"></div>Calcul des dimensions</div>
+      <div class="loading-step" id="ls-2"><div class="step-dot"></div>Identification du profil</div>
+      <div class="loading-step" id="ls-3"><div class="step-dot"></div>Génération des priorités</div>
+      <div class="loading-step" id="ls-4"><div class="step-dot"></div>Analyse IA personnalisée</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 4 — RESULTS
+══════════════════════════════════════════ -->
+<div id="screen-results" class="screen">
+  <div class="results-wrap" id="results-wrap">
+    <!-- injected by JS -->
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   DATA — 60 QUESTIONS / 6 MODULES
+══════════════════════════════════════════ */
+const DIMS = {
+  leadership:   { label: 'Leadership', color: '#8B3A2A' },
+  motivation:   { label: 'Motivation', color: '#A07840' },
+  resilience:   { label: 'Résilience', color: '#4A7C59' },
+  relationnel:  { label: 'Intelligence relationnelle', color: '#3B5F8A' },
+  strategique:  { label: 'Vision stratégique', color: '#6B5EA8' },
+  operationnel: { label: 'Rigueur opérationnelle', color: '#7A6A5A' },
+};
+
+const MODULES = [
+  {
+    id: 'ancrage', num: 'Module 01', title: 'Contexte & ancrage',
+    sub: 'Votre projet de reprise et votre situation de départ',
+    questions: [
+      { id:'a1', text:'Quel type de secteur vous attire dans votre projet de reprise ?', type:'multi', hint:'Plusieurs réponses possibles',
+        opts:[{v:'industrie',l:'Industrie / Production / Artisanat',s:{operationnel:6}},{v:'services_b2b',l:'Services aux entreprises (B2B)',s:{relationnel:5}},{v:'commerce',l:'Commerce / Distribution / Retail',s:{operationnel:5}},{v:'services_b2c',l:'Services aux particuliers (B2C)',s:{relationnel:6}},{v:'tech',l:'Tech / Digital / SaaS',s:{strategique:6}},{v:'autre',l:'Secteur encore ouvert / non défini',s:{}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a2', text:'Quelle taille d\'entreprise correspond à votre projet de reprise ?', type:'choice',
+        opts:[{v:'tpe',l:'TPE — moins de 10 salariés',s:{operationnel:5}},{v:'pme_petite',l:'PME — 10 à 49 salariés',s:{leadership:5}},{v:'pme_moyenne',l:'PME — 50 à 200 salariés',s:{leadership:7,strategique:5}},{v:'eti',l:'ETI — 200 salariés et plus',s:{strategique:7,leadership:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a3', text:'Quelle est votre expérience antérieure en direction d\'entreprise ?', type:'choice',
+        opts:[{v:'aucune',l:'Première expérience de direction',s:{resilience:4}},{v:'manager',l:'Manager confirmé, jamais dirigeant seul',s:{leadership:5}},{v:'dirigeant',l:'Dirigeant salarié (DG, DAF, Directeur BU)',s:{leadership:7}},{v:'entrepreneur',l:'Entrepreneur / Fondateur de startup ou TPE',s:{motivation:7}},{v:'repreneur',l:'Déjà repreneur d\'entreprise',s:{resilience:8,strategique:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a4', text:'Votre projet de reprise se situe-t-il dans un secteur que vous connaissez ?', type:'choice',
+        opts:[{v:'oui_long',l:'Oui, c\'est mon secteur de prédilection depuis plus de 10 ans',s:{operationnel:8}},{v:'oui_court',l:'Oui, j\'y ai quelques années d\'expérience',s:{operationnel:5}},{v:'adjacent',l:'Dans un secteur adjacent ou proche du mien',s:{strategique:5}},{v:'non',l:'Non, c\'est un terrain nouveau pour moi',s:{resilience:5,motivation:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a5', text:'Quel est votre horizon d\'investissement dans ce projet ?', type:'choice',
+        opts:[{v:'court',l:'Court terme (valorisation et revente dans 3-5 ans)',s:{strategique:7}},{v:'moyen',l:'Moyen terme (10-15 ans de développement)',s:{operationnel:6}},{v:'long',l:'Long terme (projet patrimonial ou de transmission)',s:{motivation:8}},{v:'indecis',l:'Pas encore défini à ce stade',s:{resilience:3}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a6', text:'Quelles sont vos motivations pour ce projet de reprise ?', type:'multi', hint:'Plusieurs réponses possibles',
+        opts:[{v:'liberte',l:'La liberté d\'entreprendre à ma façon',s:{motivation:9,leadership:6}},{v:'defi',l:'Le défi de transformer une organisation existante',s:{strategique:8,resilience:6}},{v:'impact',l:'Créer un impact durable pour les équipes et la région',s:{motivation:7,relationnel:8}},{v:'patrimoine',l:'Construire un patrimoine et une sécurité financière',s:{operationnel:6,resilience:5}},{v:'reconnu',l:'Accéder au statut et à la reconnaissance de dirigeant',s:{motivation:6,leadership:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a7', text:'Votre entourage proche (famille, associés) est-il aligné sur ce projet ?', type:'choice',
+        opts:[{v:'total',l:'Totalement aligné et soutenant',s:{resilience:8,motivation:7}},{v:'partiel',l:'Partiellement, avec quelques réserves',s:{resilience:5}},{v:'neutre',l:'Neutre, il ne s\'implique pas dans la décision',s:{resilience:4}},{v:'opposition',l:'Il y a des résistances que je dois gérer',s:{resilience:6,leadership:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a8', text:'Comment évaluez-vous votre capacité financière personnelle pour cette reprise ?', type:'choice',
+        opts:[{v:'confortable',l:'Solide — j\'ai des fonds propres significatifs',s:{resilience:7}},{v:'adequate',l:'Adéquate — j\'ai les fonds requis avec peu de marge',s:{resilience:5}},{v:'limitee',l:'Contrainte — je devrai optimiser le montage',s:{operationnel:7}},{v:'risquee',l:'Tendue — je prendrai un risque financier personnel fort',s:{resilience:8,motivation:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a9', text:'Où en êtes-vous dans la structuration de votre approche de reprise ?', type:'choice',
+        opts:[{v:'methode',l:'J\'ai une méthode claire et je travaille avec des conseils',s:{operationnel:8}},{v:'en_cours',l:'En construction — je structure progressivement mon approche',s:{operationnel:6}},{v:'instinctif',l:'Je procède plutôt par instinct et opportunités',s:{motivation:5,operationnel:3}},{v:'debut',l:'Je suis encore au début de la réflexion',s:{strategique:3}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'a10', text:'Quel rôle envisagez-vous d\'occuper dans l\'entreprise que vous reprendrez ?', type:'choice',
+        opts:[{v:'dg_operationnel',l:'Directeur Général opérationnel, présent au quotidien',s:{leadership:7,operationnel:6}},{v:'president',l:'Président stratège, avec une équipe de direction en place',s:{strategique:8,leadership:6}},{v:'investisseur',l:'Investisseur actif, avec un dirigeant opérationnel que je nomme',s:{strategique:7}},{v:'evoluer',l:'Je construirai le bon modèle une fois la reprise réalisée',s:{resilience:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+    ]
+  },
+  {
+    id: 'leadership', num: 'Module 02', title: 'Leadership & décision',
+    sub: 'Votre style naturel pour diriger et décider',
+    questions: [
+      { id:'l1', text:'Face à une situation de crise imprévue dans votre activité professionnelle actuelle (perte d\'un client, défaillance majeure, conflit interne), quelle est votre réaction naturelle ?', type:'choice',
+        opts:[{v:'action',l:'Je prends les commandes et décide vite pour stopper la saignée',s:{leadership:8,resilience:6}},{v:'analyse',l:'Je prends le temps d\'analyser avant d\'agir',s:{operationnel:7,strategique:6}},{v:'equipe',l:'Je mobilise l\'équipe immédiatement pour co-construire la réponse',s:{relationnel:7,leadership:5}},{v:'expert',l:'Je sollicite des experts ou conseillers externes',s:{resilience:5,relationnel:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'l2', text:'Comment prenez-vous naturellement une décision difficile avec des informations incomplètes ?', type:'scale', left:'Je décide avec les éléments disponibles, quitte à ajuster', right:'J\'attends d\'avoir plus d\'information avant de trancher', dim:'leadership' },
+      { id:'l3', text:'Un manager clé résiste à vos orientations stratégiques. Quelle est votre approche ?', type:'choice',
+        opts:[{v:'dialogue',l:'Je cherche à comprendre ses objections et à trouver un compromis',s:{relationnel:8,leadership:5}},{v:'conviction',l:'Je prends le temps de le convaincre en expliquant ma vision',s:{leadership:7,relationnel:6}},{v:'cadre',l:'Je pose le cadre : il s\'aligne ou on se sépare',s:{leadership:8,resilience:5}},{v:'mission',l:'Je redéfinit sa mission pour l\'aligner sur mes objectifs',s:{leadership:7,operationnel:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'l4', text:'Dans quelle mesure déléguez-vous naturellement ?', type:'scale', left:'Je garde la main sur la plupart des sujets importants', right:'Je délègue largement dès que je fais confiance', dim:'leadership' },
+      { id:'l5', text:'Comment annoncez-vous une mauvaise nouvelle à votre équipe (résultats décevants, restructuration) ?', type:'choice',
+        opts:[{v:'direct',l:'Directement, clairement, sans enrobage',s:{leadership:8}},{v:'prepare',l:'Après avoir préparé un plan de sortie de crise à présenter en même temps',s:{operationnel:7,leadership:6}},{v:'progressif',l:'Progressivement, en préparant les esprits',s:{relationnel:7}},{v:'individuel',l:'En commençant par les managers, avant de descendre',s:{relationnel:6,leadership:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'l6', text:'Quel est votre rapport naturel à l\'autorité hiérarchique en tant que dirigeant ?', type:'choice',
+        opts:[{v:'naturel',l:'Je me sens naturellement à l\'aise dans ce rôle',s:{leadership:8}},{v:'apprend',l:'C\'est quelque chose que je construis consciemment',s:{leadership:5,resilience:6}},{v:'collaboratif',l:'Je préfère un leadership collaboratif, peu hiérarchique',s:{relationnel:8}},{v:'contextuel',l:'Je m\'adapte : directif si nécessaire, participatif sinon',s:{leadership:7,resilience:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'l7', text:'Comment gérez-vous votre rapport au temps et aux priorités quotidiennes ?', type:'scale', left:'Je suis très discipliné·e, agenda structuré, priorités claires', right:'Je m\'adapte au flux, réactif aux opportunités', dim:'operationnel' },
+      { id:'l8', text:'Face à un collaborateur sous-performant malgré plusieurs discussions, quelle est votre décision ?', type:'choice',
+        opts:[{v:'separation',l:'Je procède à la séparation — la performance est non-négociable',s:{leadership:8}},{v:'plan',l:'Je mets en place un plan d\'amélioration formel avec jalons',s:{operationnel:7,leadership:6}},{v:'repositionnement',l:'Je cherche à le repositionner sur un rôle mieux adapté',s:{relationnel:7}},{v:'attente',l:'Je lui donne encore du temps — les personnes peuvent évoluer',s:{relationnel:5,resilience:4}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'l9', text:'Comment communiquez-vous votre vision à vos équipes ?', type:'choice',
+        opts:[{v:'discours',l:'Par des prises de parole régulières, incarnées et inspirantes',s:{leadership:8,motivation:6}},{v:'documents',l:'Par des documents structurés et des plans formalisés',s:{operationnel:7}},{v:'dialogue',l:'Par des échanges individuels et en petits groupes',s:{relationnel:8}},{v:'actes',l:'Par mes actes et décisions plus que par les mots',s:{leadership:6,operationnel:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'l10', text:'Quel est votre principal risque de déraillement sous forte pression ?', type:'choice',
+        opts:[{v:'directif',l:'Devenir trop directif, court-circuiter l\'équipe',s:{leadership:5,relationnel:3}},{v:'indecis',l:'Tomber dans la sur-analyse, ne pas décider',s:{operationnel:4,leadership:3}},{v:'isole',l:'M\'isoler, tout gérer seul sans communiquer',s:{resilience:3,relationnel:2}},{v:'perfectionniste',l:'M\'engluer dans les détails, perdre le cap',s:{operationnel:4,strategique:2}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+    ]
+  },
+  {
+    id: 'motivation', num: 'Module 03', title: 'Motivations & aspirations',
+    sub: 'Ce qui vous anime profondément et vos aspirations pour ce projet',
+    questions: [
+      { id:'m1', text:'Sur une échelle de 1 à 10, dans quelle mesure êtes-vous animé·e par la croissance et le développement de l\'entreprise (vs sa stabilisation) ?', type:'scale', scale10:true, left:'Stabiliser, pérenniser, optimiser', right:'Développer, conquérir, transformer', dim:'motivation' },
+      { id:'m2', text:'Qu\'est-ce qui vous donnerait le sentiment d\'avoir réussi dans 5 ans ?', type:'multi', hint:'Plusieurs réponses possibles',
+        opts:[{v:'financier',l:'Avoir créé une valeur financière significative',s:{operationnel:7,strategique:6}},{v:'equipe',l:'Avoir constitué une équipe solide et autonome',s:{relationnel:8,leadership:6}},{v:'marque',l:'Avoir fait rayonner l\'entreprise sur son marché',s:{strategique:8,motivation:7}},{v:'impact',l:'Avoir eu un impact sur l\'emploi local et l\'écosystème',s:{motivation:8,relationnel:7}},{v:'depassement',l:'M\'être dépassé·e et avoir grandi en tant que dirigeant',s:{resilience:7,motivation:8}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'m3', text:'Votre rapport au risque financier personnel dans ce projet est…', type:'choice',
+        opts:[{v:'fort',l:'Je suis prêt à tout miser — c\'est mon projet de vie',s:{resilience:8,motivation:9}},{v:'calcule',l:'J\'assume un risque important mais calculé et analysé',s:{operationnel:8,strategique:7}},{v:'mesure',l:'Je cherche à limiter mon exposition personnelle',s:{operationnel:6,resilience:5}},{v:'prudent',l:'Je suis fondamentalement prudent en matière financière',s:{resilience:4,operationnel:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'m4', text:'Comment décrieriez-vous votre rapport à l\'argent en tant que dirigeant ?', type:'choice',
+        opts:[{v:'moyen',l:'L\'argent est un moyen, pas une fin en soi',s:{motivation:7}},{v:'score',l:'C\'est le principal indicateur de ma réussite',s:{operationnel:8,strategique:6}},{v:'liberte',l:'Il me donne la liberté de faire mes choix',s:{motivation:8}},{v:'responsabilite',l:'C\'est une responsabilité envers mes équipes et actionnaires',s:{leadership:7,operationnel:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'m5', text:'Comment vivez-vous les périodes d\'incertitude prolongée (négociation longue, attente d\'une décision clé) ?', type:'scale', left:'Très inconfortablement — j\'ai besoin de clarté', right:'Sereinement — je sais naviguer dans le flou', dim:'resilience' },
+      { id:'m6', text:'Quelle dimension du rôle de dirigeant vous attire le plus naturellement ?', type:'choice',
+        opts:[{v:'strategique',l:'La réflexion stratégique et les grands arbitrages',s:{strategique:9}},{v:'commercial',l:'Le développement commercial et la relation clients',s:{relationnel:7,motivation:6}},{v:'operationnel',l:'L\'optimisation des opérations et la performance',s:{operationnel:9}},{v:'humain',l:'Le management et le développement des personnes',s:{relationnel:8}},{v:'financier',l:'La gestion financière et le pilotage par les chiffres',s:{operationnel:8,strategique:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'m7', text:'Dans quelle mesure avez-vous besoin de reconnaissance externe pour être motivé·e ?', type:'scale', left:'Je suis très autonome dans ma motivation', right:'La reconnaissance est un moteur important pour moi', dim:'motivation' },
+      { id:'m8', text:'Comment décrieriez-vous votre rapport à l\'échec ?', type:'choice',
+        opts:[{v:'apprentissage',l:'C\'est une étape d\'apprentissage nécessaire',s:{resilience:8}},{v:'inacceptable',l:'Je fais tout pour l\'éviter — l\'échec n\'est pas une option',s:{resilience:5,leadership:6}},{v:'info',l:'C\'est une information comme une autre, qui oriente ma décision',s:{strategique:7,resilience:7}},{v:'crainte',l:'J\'ai tendance à l\'anticiper avec beaucoup d\'anxiété',s:{resilience:3,operationnel:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'m9', text:'Dans 10 ans, comment souhaitez-vous que vos collaborateurs actuels vous décrivent ?', type:'choice',
+        opts:[{v:'visionnaire',l:'Un visionnaire qui a transformé l\'entreprise',s:{strategique:8,leadership:7}},{v:'humain',l:'Un dirigeant qui a donné sa chance à chacun',s:{relationnel:9}},{v:'performant',l:'Un chef d\'entreprise qui a créé de la valeur',s:{operationnel:8}},{v:'integre',l:'Quelqu\'un d\'intègre et de cohérent en toutes circonstances',s:{leadership:7,motivation:8}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'m10', text:'Sur une échelle de 1 à 10, dans quelle mesure votre projet de reprise est-il aussi un projet de développement personnel ?', type:'scale', left:'Surtout un projet professionnel et financier', right:'Autant un projet de développement personnel', dim:'motivation' },
+    ]
+  },
+  {
+    id: 'resilience', num: 'Module 04', title: 'Résilience & robustesse',
+    sub: 'Votre capacité à tenir dans l\'adversité et à rebondir',
+    questions: [
+      { id:'r1', text:'Imaginez : six mois après votre prise de fonction, les résultats sont 30% inférieurs aux prévisions. Quelle est votre posture ?', type:'choice',
+        opts:[{v:'analyse',l:'J\'analyse les causes en profondeur et révise le business plan',s:{strategique:8,resilience:7}},{v:'mobilise',l:'Je mobilise l\'équipe autour d\'un plan de redressement rapide',s:{leadership:8,resilience:6}},{v:'externe',l:'Je cherche un appui externe (coach, conseil) pour m\'aider',s:{resilience:6,relationnel:5}},{v:'hypotheses',l:'Je remets en cause mes hypothèses initiales fondamentales',s:{strategique:9,resilience:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'r2', text:'Imaginez : dans les premières semaines de votre prise de poste, vous découvrez un problème grave non anticipé (litige en cours, perte d\'un client majeur, tension sociale). Quelle est votre première réaction ?', type:'choice',
+        opts:[{v:'action',l:'Je prends les mesures conservatoires immédiates et avertis toutes les parties',s:{operationnel:8,leadership:7}},{v:'expert',l:'Je consulte immédiatement mes experts (avocat, expert-comptable)',s:{operationnel:7,resilience:6}},{v:'negocie',l:'Je cherche à renégocier ou à trouver un arrangement',s:{strategique:7,resilience:6}},{v:'assume',l:'Je l\'assume et l\'intègre dans mon plan de financement révisé',s:{resilience:8,leadership:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'r3', text:'Comment gérez-vous votre énergie sur le long terme (semaines à très fort rythme) ?', type:'scale', left:'Je m\'épuise facilement, j\'ai besoin de récupération fréquente', right:'Je tiens sur la durée, le rythme intense me stimule', dim:'resilience' },
+      { id:'r4', text:'Avez-vous un système personnel de récupération et de ressourcement ?', type:'choice',
+        opts:[{v:'sport',l:'Sport régulier et discipline physique',s:{resilience:8}},{v:'famille',l:'Ma famille et ma vie personnelle sont mon ancre',s:{resilience:7,relationnel:6}},{v:'reflexion',l:'Journaling, méditation, coach personnel',s:{resilience:7,motivation:6}},{v:'reseau',l:'Mon réseau de dirigeants et mes pairs',s:{relationnel:7,resilience:5}},{v:'peu',l:'Je n\'ai pas vraiment de système établi',s:{resilience:3}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'r5', text:'Comment réagissez-vous face à une trahison ou une déception forte de la part d\'un collaborateur de confiance ?', type:'choice',
+        opts:[{v:'distance',l:'Je crée de la distance et réorganise rapidement',s:{leadership:7,resilience:6}},{v:'dialogue',l:'Je cherche d\'abord à comprendre avant de réagir',s:{relationnel:7,resilience:5}},{v:'marque',l:'Ça me marque durablement et affecte ma confiance',s:{resilience:3,relationnel:4}},{v:'apprend',l:'Je l\'intègre comme une leçon pour mieux manager',s:{resilience:8,leadership:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'r6', text:'Êtes-vous à l\'aise avec l\'idée que vous n\'aurez jamais toutes les réponses en tant que dirigeant ?', type:'scale', left:'Non, cela me génère de l\'inconfort ou du stress', right:'Oui, je suis à l\'aise avec l\'incertitude de rôle', dim:'resilience' },
+      { id:'r7', text:'Comment vivez-vous la solitude du dirigeant ?', type:'choice',
+        opts:[{v:'assume',l:'Je l\'assume pleinement — c\'est inhérent au rôle',s:{leadership:8,resilience:7}},{v:'attenuation',l:'Je l\'atténue avec un conseil de surveillance ou un board',s:{strategique:7,resilience:6}},{v:'reseau',l:'Je me ressource régulièrement avec des pairs dirigeants',s:{relationnel:8,resilience:6}},{v:'difficile',l:'C\'est quelque chose que je dois apprendre à mieux gérer',s:{resilience:4}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'r8', text:'Avez-vous déjà vécu un échec professionnel significatif ? Comment l\'avez-vous traversé ?', type:'choice',
+        opts:[{v:'rebondi',l:'Oui, j\'en ai tiré des apprentissages majeurs',s:{resilience:9,motivation:7}},{v:'difficile',l:'Oui, c\'était difficile mais j\'ai su reconstruire',s:{resilience:7}},{v:'non_appris',l:'Oui, j\'ai eu du mal — c\'est encore douloureux',s:{resilience:3}},{v:'non',l:'Non, pas d\'échec significatif à ce stade',s:{resilience:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'r9', text:'Comment qualifieriez-vous votre capacité à prendre des décisions impopulaires ?', type:'scale', left:'Je les évite ou les diffère autant que possible', right:'Je les assume sans difficulté quand elles sont nécessaires', dim:'leadership' },
+      { id:'r10', text:'Sur une échelle de 1 à 10, comment évaluez-vous votre propre robustesse psychologique pour traverser les 24 premiers mois d\'une reprise ?', type:'scale', left:'Je sais que ce sera très éprouvant pour moi', right:'Je suis confiant·e dans ma solidité sur la durée', dim:'resilience' },
+    ]
+  },
+  {
+    id: 'relationnel', num: 'Module 05', title: 'Intelligence relationnelle',
+    sub: 'Votre rapport aux équipes, clients et parties prenantes',
+    questions: [
+      { id:'re1', text:'Imaginez que vous prenez la direction d\'une PME avec des équipes en place depuis plusieurs années. Votre instinct naturel est de…', type:'choice',
+        opts:[{v:'ecoute',l:'Observer et écouter avant d\'agir — ne pas déstructurer',s:{relationnel:9,strategique:6}},{v:'cadre',l:'Poser rapidement mes attentes et ma façon de travailler',s:{leadership:8,resilience:5}},{v:'talents',l:'Identifier les talents clés et les fidéliser en priorité',s:{relationnel:7,leadership:6}},{v:'evaluer',l:'Évaluer chaque poste et décider rapidement des évolutions',s:{operationnel:7,leadership:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'re2', text:'Comment êtes-vous à l\'aise dans les situations de conflit interpersonnel direct ?', type:'scale', left:'Je les évite et cherche toujours un terrain neutre', right:'Je les affronte directement, c\'est sain et nécessaire', dim:'relationnel' },
+      { id:'re3', text:'Quel est votre mode de communication préféré avec vos équipes ?', type:'choice',
+        opts:[{v:'face',l:'En face à face — la relation directe et l\'échange',s:{relationnel:8}},{v:'reunions',l:'En réunion structurée avec un ordre du jour précis',s:{operationnel:7}},{v:'ecrit',l:'Par écrit — notes, emails, synthèses',s:{operationnel:6}},{v:'mixte',l:'Je m\'adapte au profil de chacun',s:{relationnel:8,leadership:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'re4', text:'Quelle relation souhaitez-vous établir avec le cédant lors de la phase de transition ?', type:'choice',
+        opts:[{v:'autonomie',l:'Je veux créer rapidement mon autonomie pour ne pas rester dans son ombre',s:{leadership:8}},{v:'transition',l:'Je préfère une transition accompagnée avec un rôle clairement défini pour lui',s:{operationnel:7,strategique:6}},{v:'conseil',l:'Je souhaite l\'intégrer comme conseiller ou au board sur le long terme',s:{strategique:7,relationnel:6}},{v:'rupture',l:'Je préfère une rupture nette dès la signature',s:{leadership:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'re5', text:'Dans quelle mesure êtes-vous influencé·e par les opinions de votre entourage dans vos décisions professionnelles ?', type:'scale', left:'Je suis très indépendant·e dans mes décisions', right:'Je tiens beaucoup compte des avis de mes proches', dim:'relationnel' },
+      { id:'re6', text:'Comment gérez-vous la relation avec les actionnaires minoritaires ou un éventuel pool bancaire ?', type:'choice',
+        opts:[{v:'transparent',l:'Transparence totale et communication proactive permanente',s:{relationnel:8,leadership:6}},{v:'structure',l:'Communication structurée aux jalons décisifs',s:{operationnel:8,strategique:6}},{v:'resultats',l:'Je communique par les résultats et les actes',s:{operationnel:7,leadership:5}},{v:'confiance',l:'Je construis d\'abord une relation de confiance personnelle',s:{relationnel:9}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'re7', text:'Dans quelle mesure êtes-vous à l\'aise avec la vente et la représentation commerciale ?', type:'scale', left:'C\'est un effort réel, ce n\'est pas mon terrain naturel', right:'J\'adore ça — je suis naturellement dans la relation client', dim:'relationnel' },
+      { id:'re8', text:'Comment percevez-vous votre capacité à créer de l\'adhésion autour d\'une vision ?', type:'choice',
+        opts:[{v:'fort',l:'C\'est un de mes points forts — je sais embarquer les gens',s:{leadership:9,motivation:7}},{v:'construit',l:'Je sais le faire avec méthode et préparation',s:{leadership:6,operationnel:5}},{v:'dev',l:'C\'est quelque chose que je dois encore développer',s:{leadership:4,resilience:5}},{v:'prefere',l:'Je préfère convaincre par les faits et les résultats',s:{operationnel:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'re9', text:'Comment réagissez-vous quand un collaborateur met en doute vos décisions devant l\'équipe ?', type:'choice',
+        opts:[{v:'dialogue',l:'Je l\'accueille ouvertement — la contradiction est utile',s:{relationnel:8,leadership:6}},{v:'prive',l:'Je recadre en privé et pose les règles du jeu',s:{leadership:7}},{v:'energie',l:'Je prends ça comme une opportunité de renforcer ma vision',s:{leadership:8,motivation:6}},{v:'malaise',l:'Ça me génère un malaise que j\'ai du mal à gérer',s:{resilience:3,relationnel:4}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'re10', text:'Quelle place accordez-vous naturellement au bien-être des équipes dans vos préoccupations de dirigeant ?', type:'scale', left:'C\'est secondaire — la performance prime', right:'C\'est une priorité de premier rang pour moi', dim:'relationnel' },
+    ]
+  },
+  {
+    id: 'strategique', num: 'Module 06', title: 'Vision stratégique & opérationnel',
+    sub: 'Votre équilibre entre le cap long terme et l\'exécution quotidienne',
+    questions: [
+      { id:'s1', text:'Dans votre travail, vous êtes naturellement davantage…', type:'scale', left:'Dans la vision, le cap à long terme', right:'Dans l\'exécution concrète et les résultats immédiats', dim:'strategique' },
+      { id:'s2', text:'Pour construire votre plan de développement dès votre prise de poste, vous partiriez en priorité de…', type:'choice',
+        opts:[{v:'marche',l:'Une analyse approfondie du marché et de la concurrence',s:{strategique:9,operationnel:5}},{v:'interne',l:'Un diagnostic interne des forces et faiblesses de l\'organisation',s:{operationnel:8,strategique:6}},{v:'clients',l:'Les retours directs des clients et des équipes terrain',s:{relationnel:8,strategique:5}},{v:'vision',l:'Ma vision personnelle de ce que l\'entreprise devrait devenir',s:{leadership:7,strategique:7}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'s3', text:'Votre rapport à la gestion financière et aux tableaux de bord est…', type:'choice',
+        opts:[{v:'fort',l:'C\'est ma boussole principale — très à l\'aise avec les chiffres',s:{operationnel:10,strategique:6}},{v:'competent',l:'Je maîtrise les indicateurs clés — pas mon fort mais je pilote',s:{operationnel:6,strategique:5}},{v:'delogue',l:'Je délègue au DAF ou expert-comptable dès que possible',s:{leadership:6,operationnel:3}},{v:'dev',l:'C\'est un axe de développement sur lequel je dois progresser',s:{operationnel:2,resilience:4}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'s4', text:'Comment construisez-vous une stratégie de développement ?', type:'choice',
+        opts:[{v:'data',l:'Par une analyse structurée des données de marché et des benchmarks',s:{strategique:8,operationnel:7}},{v:'terrain',l:'Par immersion terrain et écoute des parties prenantes',s:{relationnel:7,strategique:6}},{v:'intuition',l:'Par intuition et expérience — je sais reconnaître les signaux',s:{leadership:7,strategique:6}},{v:'equipe',l:'En co-construction avec mon équipe de direction',s:{leadership:6,relationnel:8}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'s5', text:'Dans quelle mesure êtes-vous à l\'aise avec l\'identification et la gestion des risques ?', type:'scale', left:'C\'est un exercice laborieux, je préfère l\'action', right:'C\'est essentiel — j\'ai une approche structurée du risque', dim:'operationnel' },
+      { id:'s6', text:'Comment abordez-vous l\'innovation dans une entreprise que vous dirigez ?', type:'choice',
+        opts:[{v:'rapid',l:'Je l\'impulse rapidement — c\'est un levier de rupture dès la prise de poste',s:{strategique:8,leadership:7}},{v:'progressif',l:'Progressivement, après avoir stabilisé et compris l\'existant',s:{operationnel:7,strategique:5}},{v:'equipe',l:'Je crée les conditions pour que les équipes l\'initient elles-mêmes',s:{relationnel:7,leadership:6}},{v:'marche',l:'Uniquement si le marché l\'exige clairement',s:{strategique:6,operationnel:6}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'s7', text:'Comment gérez-vous la priorisation quand tout semble urgent ?', type:'scale', left:'J\'ai du mal à prioriser sous pression — je fais trop à la fois', right:'Je priorise avec méthode même en situation dégradée', dim:'operationnel' },
+      { id:'s8', text:'Quel est votre rapport au changement organisationnel (réorg, nouvelles méthodes, nouveaux outils) ?', type:'choice',
+        opts:[{v:'moteur',l:'Je suis moteur du changement — je l\'initie volontiers',s:{leadership:8,strategique:7}},{v:'gerant',l:'Je le gère méthodiquement avec les équipes',s:{operationnel:8,leadership:6}},{v:'prudent',l:'Je suis prudent — le changement a un coût humain souvent sous-estimé',s:{relationnel:7,operationnel:5}},{v:'reactive',l:'Je réagis quand c\'est clairement nécessaire',s:{operationnel:5}},{v:'libre',l:'Autre…',free:true,s:{}}] },
+      { id:'s9', text:'Comment définissez-vous le succès de votre reprise à 3 ans ?', type:'choice',
+        opts:[{v:'croissance',l:'Chiffre d\'affaires et EBITDA significativement supérieurs',s:{strategique:8,operationnel:7}},{v:'equipe',l:'Une équipe de direction solide et autonome sans moi',s:{leadership:8,relationnel:7}},{v:'marque',l:'Une marque reconnue et un positionnement différencié',s:{strategique:8,motivation:7}},{v:'hybride',l:'Un équilibre entre performance financière et culture saine',s:{motivation:7,operationnel:6}}] },
+      { id:'s10', text:'Sur une échelle de 1 à 10, comment évaluez-vous votre capacité à penser systémique (voir les interdépendances, effets de second ordre) ?', type:'scale', scale10:true, left:'Je raisonne surtout linéairement, cause à effet', right:'Je pense naturellement en systèmes complexes', dim:'strategique' },
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════
+   PROFILES & FORCES
+══════════════════════════════════════════ */
+const PROFILES = {
+  leadership_strategique: {
+    type:'Le Visionnaire Décisif',
+    tagline:'Vision claire, cap affirmé, capacité à créer l\'élan.',
+    desc:'Votre combinaison de leadership fort et de pensée stratégique naturelle vous place parmi les profils les plus rares en reprise d\'entreprise. Vous savez fixer un cap crédible et embarquer les équipes sans avoir besoin de consensus. Ce profil est particulièrement précieux dans des contextes de transformation ou de repositionnement.',
+    forces:[
+      { titre:'Clarté de vision', texte:'Vous formulez naturellement une direction lisible pour les équipes, les financeurs et les partenaires.' },
+      { titre:'Décision sous ambiguïté', texte:'Là où d\'autres cherchent plus d\'information, vous savez trancher avec les éléments disponibles.' },
+      { titre:'Légitimité rapide', texte:'Votre posture crée rapidement une autorité perçue — atout déterminant dans les premiers mois.' },
+    ],
+    fit:'Entreprises nécessitant un repositionnement stratégique, PME à potentiel sous-exploité, contextes de rupture sectorielle où une vision forte est le premier levier de valeur.'
+  },
+  leadership_resilience: {
+    type:'Le Capitaine Résilient',
+    tagline:'Solidité dans la tempête, cap tenu dans la durée.',
+    desc:'Vous avez la rareté d\'un profil qui combine autorité décisionnelle et robustesse psychologique. Dans les phases de reprise difficiles — redressement, restructuration, contexte social tendu — vous êtes le type de dirigeant que les équipes recherchent instinctivement. Votre solidité est une ressource organisationnelle en soi.',
+    forces:[
+      { titre:'Stabilité dans l\'adversité', texte:'Vous ne vous effondrez pas sous la pression — les équipes le ressentent et s\'y adossent.' },
+      { titre:'Autorité naturelle', texte:'Votre leadership s\'exprime avec d\'autant plus de force quand les situations sont complexes.' },
+      { titre:'Endurance exécutive', texte:'Vous tenez sur la durée là où d\'autres s\'épuisent — précieux dans les premières années.' },
+    ],
+    fit:'Entreprises en situation délicate (retournement, plan social, crise de gouvernance), secteurs cycliques ou exposés à la volatilité, PME avec des équipes historiques à stabiliser.'
+  },
+  leadership_operationnel: {
+    type:'L\'Exécutif Ancré',
+    tagline:'Vous dirigez par les actes et construisez sur des fondations solides.',
+    desc:'Votre profil combine décision ferme et maîtrise opérationnelle. Vous ne vous contentez pas de donner le cap — vous comprenez le terrain, les process, les rouages. Cette double compétence vous permet de gagner rapidement la confiance des équipes opérationnelles et de détecter les vrais leviers de performance.',
+    forces:[
+      { titre:'Crédibilité terrain', texte:'Vous comprenez le métier en profondeur, ce qui vous donne une autorité naturelle auprès des équipes opérationnelles.' },
+      { titre:'Diagnostic rapide', texte:'Vous identifiez vite les dysfonctionnements réels et les gains de performance accessibles.' },
+      { titre:'Exécution sans écart', texte:'Vos décisions sont suivies d\'effets — vous ne laissez pas de gap entre la décision et la réalité.' },
+    ],
+    fit:'PME industrielles ou de services avec des process à fiabiliser, entreprises où la performance opérationnelle est le principal levier de valeur, contextes de normalisation après une période de croissance désorganisée.'
+  },
+  motivation_relationnel: {
+    type:'L\'Entrepreneur Humaniste',
+    tagline:'L\'énergie du projet et le sens des personnes, combinés.',
+    desc:'Votre profil est celui des repreneurs qui transforment durablement la culture d\'une organisation. Vous n\'êtes pas seulement animé par un projet — vous savez créer l\'adhésion autour de lui. Dans des contextes où l\'engagement des équipes est la clé de la performance, votre profil est un avantage compétitif direct.',
+    forces:[
+      { titre:'Pouvoir d\'engagement', texte:'Vous savez créer un sens partagé qui retient les talents et mobilise les équipes sur le long terme.' },
+      { titre:'Légitimité relationnelle', texte:'Votre authenticité crée rapidement la confiance — avec les équipes, les clients, les partenaires.' },
+      { titre:'Attractivité de projet', texte:'Votre façon de porter le projet donne envie de vous rejoindre — atout pour recruter les bons profils.' },
+    ],
+    fit:'Entreprises de services à forte dimension humaine, PME dont la culture est un actif, secteurs où la fidélisation des équipes et des clients est le premier enjeu de performance.'
+  },
+  motivation_strategique: {
+    type:'L\'Architecte de Rupture',
+    tagline:'Vous voyez ce que les autres ne voient pas encore.',
+    desc:'Vous avez la combinaison rare d\'un projet de sens fort et d\'une capacité à penser le long terme avec rigueur. Vous êtes à l\'aise dans l\'ambiguïté et dans les marchés en transformation. Là où d\'autres voient un secteur mature, vous percevez les angles de différenciation inexploités.',
+    forces:[
+      { titre:'Lecture des signaux faibles', texte:'Vous anticipez les évolutions de marché avant qu\'elles ne soient évidentes pour tous.' },
+      { titre:'Vision différenciante', texte:'Vous construisez des stratégies non-conventionnelles qui créent un écart concurrentiel durable.' },
+      { titre:'Conviction portante', texte:'Votre engagement dans le projet devient une force d\'attraction pour les investisseurs, les partenaires et les talents.' },
+    ],
+    fit:'Secteurs en mutation ou sous-digitalisés, PME avec un potentiel de repositionnement non exploité, entreprises où une transformation du modèle économique est nécessaire à horizon 3-5 ans.'
+  },
+  operationnel_strategique: {
+    type:'L\'Architecte Rigoureux',
+    tagline:'Vous construisez sur des fondations solides et pilotez avec précision.',
+    desc:'Votre profil est celui des dirigeants qui ne laissent rien au hasard. Vous combinez vision long terme et discipline d\'exécution — une combinaison rare qui rassure les financeurs et crédibilise votre leadership auprès des équipes. Vous êtes particulièrement efficace dans des contextes où la qualité du pilotage est un avantage compétitif.',
+    forces:[
+      { titre:'Discipline de pilotage', texte:'Vous construisez des systèmes d\'information et de décision qui rendent l\'organisation prévisible et performante.' },
+      { titre:'Crédibilité financière', texte:'Votre maîtrise des chiffres et votre rigueur rassurent les partenaires financiers et les actionnaires.' },
+      { titre:'Architecture organisationnelle', texte:'Vous savez concevoir des structures qui scalent — atout précieux dans une phase de croissance.' },
+    ],
+    fit:'PME à fort potentiel de professionnalisation, entreprises familiales en transition vers une gestion structurée, contextes où la rigueur de pilotage est le premier levier de valorisation.'
+  },
+  relationnel_strategique: {
+    type:'Le Bâtisseur de Confiance',
+    tagline:'Vous créez les alliances qui font la différence dans la durée.',
+    desc:'Votre profil est celui des dirigeants qui gagnent les parties prenantes une par une, avec méthode. Vous lisez les personnes et les systèmes avec la même acuité. Dans des contextes où la relation — avec les clients, les équipes, les partenaires — est au cœur de la valeur, votre intelligence relationnelle est un actif stratégique.',
+    forces:[
+      { titre:'Lecture des écosystèmes', texte:'Vous comprenez les dynamiques relationnelles et les rapports de force — vous savez où mettre l\'énergie.' },
+      { titre:'Fidélisation des parties prenantes', texte:'Clients, équipes, partenaires — vous créez des relations durables qui deviennent des avantages compétitifs.' },
+      { titre:'Négociation et conviction', texte:'Votre intelligence relationnelle vous rend particulièrement efficace dans les situations de négociation complexe.' },
+    ],
+    fit:'Entreprises B2B à forte relation client, PME dont la réputation et le réseau sont des actifs majeurs, secteurs où la confiance est le principal critère de choix des clients.'
+  },
+  resilience_operationnel: {
+    type:'Le Gestionnaire Solide',
+    tagline:'Fiabilité, endurance et maîtrise — la combinaison des dirigeants durables.',
+    desc:'Votre profil est celui des repreneurs qui construisent dans la durée. Vous combinez robustesse psychologique et discipline opérationnelle — deux qualités qui se renforcent mutuellement et qui font de vous un dirigeant sur lequel les équipes, les financeurs et les partenaires peuvent vraiment compter.',
+    forces:[
+      { titre:'Fiabilité exécutive', texte:'Vous tenez vos engagements dans le temps — qualité rare et précieuse dans les phases de post-acquisition.' },
+      { titre:'Résistance aux turbulences', texte:'Vous maintenez la performance et la clarté dans les périodes d\'adversité prolongée.' },
+      { titre:'Confiance des partenaires financiers', texte:'Votre rigueur et votre solidité créent la confiance des banquiers et actionnaires sur le long terme.' },
+    ],
+    fit:'Entreprises en phase de consolidation, PME qui ont besoin d\'être stabilisées avant d\'être développées, contextes où la régularité et la prévisibilité sont plus importantes que la rupture stratégique.'
+  },
+  default: {
+    type:'Le Dirigeant Polyvalent',
+    tagline:'Un profil équilibré, une adaptabilité précieuse.',
+    desc:'Votre profil présente une distribution équilibrée entre les différentes dimensions du leadership de repreneur. Cette polyvalence est un atout réel dans des contextes variés et témoigne d\'une capacité d\'adaptation que les entreprises complexes valorisent. Votre force est de pouvoir intervenir sur plusieurs registres sans point de faiblesse marqué.',
+    forces:[
+      { titre:'Adaptabilité contextuelle', texte:'Vous ne vous enfermez pas dans un registre — vous modulez votre posture selon les situations.' },
+      { titre:'Polyvalence managériale', texte:'Vous pouvez couvrir plusieurs dimensions du leadership sans avoir besoin d\'une équipe de direction complète dès le départ.' },
+      { titre:'Absence de point aveugle majeur', texte:'Votre équilibre entre les dimensions vous préserve des angles morts qui fragilisent certains profils très typés.' },
+    ],
+    fit:'Large spectre de profils d\'entreprise — votre polyvalence est une force dans des contextes qui combinent plusieurs enjeux simultanés (humain, stratégique, opérationnel).'
+  },
+};
+
+// Calcul des 3 forces dominantes pour le rapport
+function getTopForces(sc) {
+  const FORCE_MAP = {
+    leadership:   { titre:'Leadership & décision',        desc:'Votre capacité à diriger, à décider et à incarner une autorité crédible.',           icon:'◈' },
+    motivation:   { titre:'Énergie & sens du projet',     desc:'La puissance de votre engagement et la clarté de ce qui vous anime profondément.',   icon:'◈' },
+    resilience:   { titre:'Résilience & endurance',       desc:'Votre robustesse face à l\'adversité et votre capacité à tenir sur la durée.',       icon:'◈' },
+    relationnel:  { titre:'Intelligence relationnelle',   desc:'Votre talent à créer la confiance, à lire les personnes et à fédérer.',              icon:'◈' },
+    strategique:  { titre:'Vision stratégique',           desc:'Votre aptitude à penser le long terme, anticiper et construire un cap différenciant.',icon:'◈' },
+    operationnel: { titre:'Rigueur opérationnelle',       desc:'Votre maîtrise de l\'exécution, du pilotage et de la performance concrète.',         icon:'◈' },
+  };
+  return Object.entries(sc)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,3)
+    .map(([k, v]) => ({ ...FORCE_MAP[k], score: v, dim: k }));
+}
+
+// Signaux de fit entreprise basés sur le profil
+function getFitSignals(sc) {
+  const FIT_SIGNALS = {
+    leadership:   { haut:'Entreprise avec un management à restructurer ou une équipe à recentrer sur un nouveau cap.', bas:'Éviter les contextes trop stables où le leadership fort peut être vécu comme intrusif.' },
+    motivation:   { haut:'Entreprise dont le potentiel est sous-exploité et qui a besoin d\'un porteur de projet convaincu.', bas:'Éviter les contextes purement financiers où la dimension humaine du projet n\'a pas de place.' },
+    resilience:   { haut:'Contextes exigeants, entreprises en retournement ou traversant une période de transformation difficile.', bas:'Pas de signal négatif particulier — la résilience est un atout dans tous les contextes.' },
+    relationnel:  { haut:'Entreprise dont la valeur repose sur ses relations clients, son réseau ou la fidélité de ses équipes.', bas:'Éviter les contextes très transactionnels où la relation compte peu dans le modèle économique.' },
+    strategique:  { haut:'Secteur en mutation, entreprise avec un potentiel de repositionnement ou de rupture non exploité.', bas:'Éviter les entreprises très matures où seule l\'optimisation opérationnelle crée de la valeur.' },
+    operationnel: { haut:'PME avec des process à fiabiliser, des coûts à optimiser ou une organisation à professionnaliser.', bas:'Éviter les contextes nécessitant une transformation culturelle rapide sans base solide à optimiser.' },
+  };
+
+  const sorted = Object.entries(sc).sort((a,b) => b[1]-a[1]);
+  const top2 = sorted.slice(0,2).map(([k]) => k);
+  const low2 = sorted.slice(-2).map(([k]) => k);
+
+  return {
+    positifs: top2.map(k => FIT_SIGNALS[k].haut),
+    vigilances: low2.filter(k => sc[k] < 55).map(k => FIT_SIGNALS[k].bas),
+  };
+}
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let state = {
+  modIdx: 0,
+  qIdx: 0,
+  answers: {},
+  scores: {},
+  profile: null,
+  topForces: [],
+  fitSignals: { positifs:[], vigilances:[] },
+  aiText: '',
+};
+
+function allQuestions() {
+  const qs = [];
+  MODULES.forEach((m, mi) => m.questions.forEach((q, qi) => qs.push({...q, modIdx:mi, qIdx:qi, mod:m})));
+  return qs;
+}
+
+function flatIdx() {
+  let n = 0;
+  for (let i=0; i<state.modIdx; i++) n += MODULES[i].questions.length;
+  return n + state.qIdx;
+}
+
+function totalQ() { return MODULES.reduce((a,m)=>a+m.questions.length,0); }
+
+/* ══════════════════════════════════════════
+   API KEY
+══════════════════════════════════════════ */
+function getKey() { return localStorage.getItem('oai_key') || ''; }
+
+function saveKey() {
+  const v = document.getElementById('api-key-input').value.trim();
+  if (!v) return;
+  localStorage.setItem('oai_key', v);
+  updateKeyUI();
+}
+
+function clearKey() {
+  localStorage.removeItem('oai_key');
+  document.getElementById('api-key-input').value = '';
+  updateKeyUI();
+}
+
+function updateKeyUI() {
+  const has = !!getKey();
+  document.getElementById('api-dot').className = 'api-status' + (has ? ' ok' : '');
+  document.getElementById('api-lbl').textContent = has ? 'Analyse IA activée (OpenAI GPT)' : 'Clé OpenAI pour l\'analyse IA personnalisée';
+  document.getElementById('api-input-wrap').style.display = has ? 'none' : 'flex';
+  document.getElementById('api-saved-row').style.display = has ? 'block' : 'none';
+}
+
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function startQuiz() {
+  state = { modIdx:0, qIdx:0, answers:{}, scores:{}, profile:null, topForces:[], fitSignals:{ positifs:[], vigilances:[] }, aiText:'' };
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function goNext() {
+  const q = MODULES[state.modIdx].questions[state.qIdx];
+  if (!canAdvance(q)) return;
+  const last = state.modIdx === MODULES.length - 1 && state.qIdx === MODULES[state.modIdx].questions.length - 1;
+  if (last) { runAnalysis(); return; }
+  if (state.qIdx === MODULES[state.modIdx].questions.length - 1) {
+    state.modIdx++;
+    state.qIdx = 0;
+  } else {
+    state.qIdx++;
+  }
+  renderQuestion();
+}
+
+function goBack() {
+  // Sur la toute première question → retour à l'accueil
+  if (state.modIdx === 0 && state.qIdx === 0) {
+    showScreen('welcome');
+    return;
+  }
+  if (state.qIdx === 0) {
+    state.modIdx--;
+    state.qIdx = MODULES[state.modIdx].questions.length - 1;
+  } else {
+    state.qIdx--;
+  }
+  renderQuestion();
+}
+
+function canAdvance(q) {
+  const ans = state.answers[q.id];
+  if (q.type === 'scale') return ans !== undefined;
+  if (q.type === 'choice') return !!ans;
+  if (q.type === 'multi') return Array.isArray(ans) && ans.length > 0;
+  if (q.type === 'text') return true;
+  return true;
+}
+
+/* ══════════════════════════════════════════
+   RENDER QUESTION
+══════════════════════════════════════════ */
+function renderQuestion() {
+  const mod = MODULES[state.modIdx];
+  const q = mod.questions[state.qIdx];
+  const fi = flatIdx();
+  const tot = totalQ();
+
+  // Progress
+  document.getElementById('progress-fill').style.width = ((fi / tot) * 100) + '%';
+  document.getElementById('progress-count').textContent = (fi + 1) + ' / ' + tot;
+
+  // Module dots
+  const nav = document.getElementById('module-nav');
+  nav.innerHTML = MODULES.map((m, i) => `<div class="m-dot ${i < state.modIdx ? 'done' : i === state.modIdx ? 'active' : ''}"></div>`).join('');
+
+  // Module banner (first question of module only)
+  const banner = document.getElementById('module-banner');
+  if (state.qIdx === 0) {
+    document.getElementById('mb-num').textContent = mod.num;
+    document.getElementById('mb-title').textContent = mod.title;
+    document.getElementById('mb-sub').textContent = mod.sub;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // Question
+  document.getElementById('q-tag').textContent = mod.title + ' · Question ' + (state.qIdx + 1) + ' / ' + mod.questions.length;
+  document.getElementById('q-text').textContent = q.text;
+
+  // Input
+  const zone = document.getElementById('q-input-zone');
+  if (q.type === 'choice') zone.innerHTML = renderChoices(q);
+  else if (q.type === 'multi') zone.innerHTML = renderMulti(q);
+  else if (q.type === 'scale') zone.innerHTML = renderScale(q);
+  else zone.innerHTML = `<textarea class="text-input" id="text-ans" placeholder="Votre réponse…">${state.answers[q.id]||''}</textarea>`;
+
+  // Animate card
+  const card = document.getElementById('q-card');
+  card.style.animation = 'none';
+  requestAnimationFrame(() => { card.style.animation = 'fadeUp 0.35s ease'; });
+
+  // Back btn — toujours actif, label "Accueil" sur la première question
+  const backBtn = document.getElementById('btn-back');
+  backBtn.disabled = false;
+  backBtn.textContent = (fi === 0) ? '← Accueil' : '← Précédent';
+
+  // Next btn
+  const isLast = state.modIdx === MODULES.length - 1 && state.qIdx === mod.questions.length - 1;
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.innerHTML = isLast ? 'Voir mon profil <span>→</span>' : 'Suivant <span>→</span>';
+  nextBtn.disabled = !canAdvance(q);
+
+  // Events — choice (single)
+  if (q.type === 'choice') {
+    zone.querySelectorAll('.choice').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const isFree = btn.dataset.free === 'true';
+        state.answers[q.id] = isFree ? ('libre:' + (zone.querySelector('.free-input')?.value || '')) : btn.dataset.val;
+        zone.querySelectorAll('.choice').forEach(b => b.classList.toggle('sel', b.dataset.val === btn.dataset.val));
+        const freeInput = zone.querySelector('.free-input');
+        if (freeInput) {
+          freeInput.style.display = isFree ? 'block' : 'none';
+          if (isFree) { freeInput.focus(); }
+        }
+        document.getElementById('btn-next').disabled = false;
+      });
+    });
+    const freeInput = zone.querySelector('.free-input');
+    if (freeInput) {
+      freeInput.addEventListener('input', () => {
+        if (state.answers[q.id] && String(state.answers[q.id]).startsWith('libre:')) {
+          state.answers[q.id] = 'libre:' + freeInput.value;
+        }
+      });
+    }
+    // Restore selection
+    const saved = state.answers[q.id];
+    if (saved) {
+      const isLibre = String(saved).startsWith('libre:');
+      const selVal = isLibre ? 'libre' : saved;
+      const sel = zone.querySelector(`[data-val="${selVal}"]`);
+      if (sel) {
+        sel.classList.add('sel');
+        if (isLibre && freeInput) {
+          freeInput.style.display = 'block';
+          freeInput.value = saved.slice(6);
+        }
+      }
+    }
+  }
+
+  // Events — multi (checkbox)
+  if (q.type === 'multi') {
+    const saved = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
+    const freeInput = zone.querySelector('.free-input');
+
+    zone.querySelectorAll('.choice').forEach(btn => {
+      const v = btn.dataset.val;
+      const isFree = btn.dataset.free === 'true';
+      // Restaurer état sauvegardé
+      if (saved.some(x => isFree ? String(x).startsWith('libre:') : x === v)) {
+        btn.classList.add('sel');
+      }
+      btn.addEventListener('click', () => {
+        let current = Array.isArray(state.answers[q.id]) ? [...state.answers[q.id]] : [];
+        if (isFree) {
+          const alreadySel = current.some(x => String(x).startsWith('libre:'));
+          if (alreadySel) {
+            current = current.filter(x => !String(x).startsWith('libre:'));
+            btn.classList.remove('sel');
+            if (freeInput) freeInput.style.display = 'none';
+          } else {
+            current.push('libre:');
+            btn.classList.add('sel');
+            if (freeInput) { freeInput.style.display = 'block'; freeInput.focus(); }
+          }
+        } else {
+          if (current.includes(v)) {
+            current = current.filter(x => x !== v);
+            btn.classList.remove('sel');
+          } else {
+            current.push(v);
+            btn.classList.add('sel');
+          }
+        }
+        state.answers[q.id] = current;
+        document.getElementById('btn-next').disabled = current.length === 0;
+      });
+    });
+
+    // Restaurer le champ libre si présent
+    if (freeInput) {
+      const libreVal = saved.find(x => String(x).startsWith('libre:'));
+      if (libreVal) {
+        freeInput.style.display = 'block';
+        freeInput.value = libreVal.slice(6);
+      }
+      freeInput.addEventListener('input', () => {
+        let current = Array.isArray(state.answers[q.id]) ? [...state.answers[q.id]] : [];
+        current = current.filter(x => !String(x).startsWith('libre:'));
+        current.push('libre:' + freeInput.value);
+        state.answers[q.id] = current;
+      });
+    }
+
+    // Activer next si déjà des réponses
+    document.getElementById('btn-next').disabled = saved.length === 0;
+  }
+
+  if (q.type === 'scale') {
+    const inp = zone.querySelector('.scale-native');
+    const fill = zone.querySelector('.scale-fill');
+    const val = zone.querySelector('.scale-value');
+    const thumb = zone.querySelector('.scale-thumb');
+    const is10 = !!q.scale10;
+
+    function updateScale(rawInput) {
+      // rawInput : valeur du slider (1-10 ou 0-100)
+      // stored   : toujours 0-100 pour le scoring
+      const stored = is10 ? rawInput * 10 : rawInput;
+      const pct = is10 ? (rawInput / 10) * 100 : rawInput;
+      fill.style.width = pct + '%';
+      thumb.style.left = pct + '%';
+      val.textContent = rawInput + ' / ' + (is10 ? 10 : 100);
+      state.answers[q.id] = stored;
+      document.getElementById('btn-next').disabled = false;
+    }
+
+    // Valeur initiale : reconvertir le stocké en affiché
+    const storedInit = state.answers[q.id] !== undefined ? state.answers[q.id] : 50;
+    const displayedInit = is10 ? Math.round(storedInit / 10) : storedInit;
+    inp.value = displayedInit;
+    updateScale(displayedInit);
+
+    inp.addEventListener('input', () => updateScale(parseInt(inp.value)));
+  }
+
+  if (q.type === 'text') {
+    zone.querySelector('#text-ans').addEventListener('input', e => { state.answers[q.id] = e.target.value; });
+  }
+}
+
+function renderChoices(q) {
+  return `<div class="choices">${q.opts.map(o=>`
+    <button class="choice" data-val="${o.v}" ${o.free ? 'data-free="true"' : ''}>
+      <span class="choice-bullet"></span>
+      <span>${o.l}</span>
+    </button>`).join('')}
+  </div>
+  <input type="text" class="free-input" id="free-input-${q.id}" placeholder="Précisez…" style="display:none;margin-top:8px" autocomplete="off">`;
+}
+
+function renderMulti(q) {
+  return `
+    ${q.hint ? `<div class="q-hint">${q.hint}</div>` : ''}
+    <div class="choices">${q.opts.map(o=>`
+      <button class="choice" data-val="${o.v}" ${o.free ? 'data-free="true"' : ''}>
+        <span class="choice-checkbox"></span>
+        <span>${o.l}</span>
+      </button>`).join('')}
+    </div>
+    <input type="text" class="free-input" id="free-input-${q.id}" placeholder="Précisez…" style="display:none;margin-top:8px" autocomplete="off">`;
+}
+
+function renderScale(q) {
+  const is10 = !!q.scale10;
+  // Valeur affichée : 1-10 ou 0-100
+  // Valeur stockée : toujours 0-100 pour le scoring uniforme
+  const stored = state.answers[q.id] !== undefined ? state.answers[q.id] : (is10 ? 50 : 50);
+  const displayed = is10 ? Math.round(stored / 10) : stored;
+  const displayMax = is10 ? 10 : 100;
+  const pct = is10 ? (stored / 100) * 100 : stored;
+
+  return `<div class="scale-container" data-scale10="${is10}">
+    <div class="scale-labels"><span>${q.left}</span><span>${q.right}</span></div>
+    <div class="scale-track">
+      <div class="scale-line">
+        <div class="scale-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="scale-thumb" style="left:${pct}%"></div>
+      <input type="range" class="scale-native" min="${is10 ? 1 : 0}" max="${is10 ? 10 : 100}" step="1" value="${displayed}">
+    </div>
+    <div class="scale-value">${displayed} / ${displayMax}</div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════
+   SCORING
+══════════════════════════════════════════ */
+function computeScores() {
+  const raw = {leadership:0,motivation:0,resilience:0,relationnel:0,strategique:0,operationnel:0};
+  const counts = {...raw};
+
+  MODULES.forEach(mod => {
+    mod.questions.forEach(q => {
+      const ans = state.answers[q.id];
+      if (ans === undefined || ans === null) return;
+
+      if (q.type === 'scale') {
+        const v = parseInt(ans);
+        raw[q.dim] = (raw[q.dim]||0) + v;
+        counts[q.dim] = (counts[q.dim]||0) + 100;
+      }
+
+      if (q.type === 'choice') {
+        const opt = q.opts.find(o => o.v === ans);
+        if (opt && opt.s) {
+          Object.entries(opt.s).forEach(([d,v]) => {
+            raw[d] = (raw[d]||0) + v;
+            counts[d] = (counts[d]||0) + 10;
+          });
+        }
+      }
+
+      if (q.type === 'multi' && Array.isArray(ans)) {
+        ans.forEach(val => {
+          const opt = q.opts.find(o => o.v === val);
+          if (opt && opt.s) {
+            Object.entries(opt.s).forEach(([d,v]) => {
+              raw[d] = (raw[d]||0) + v;
+              counts[d] = (counts[d]||0) + 10;
+            });
+          }
+        });
+      }
+    });
+  });
+
+  const sc = {};
+  Object.keys(raw).forEach(d => {
+    sc[d] = counts[d] > 0 ? Math.min(100, Math.round((raw[d]/counts[d])*100)) : 50;
+  });
+  return sc;
+}
+
+function getProfile(sc) {
+  const sorted = Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+  const top = sorted[0][0], sec = sorted[1][0];
+  return PROFILES[`${top}_${sec}`] || PROFILES[`${sec}_${top}`] || PROFILES.default;
+}
+
+function getPriorities(sc) {
+  return Object.entries(sc).sort((a,b)=>a[1]-b[1]).slice(0,3).map(([d])=>ACTIONS[d]).filter(Boolean);
+}
+
+/* ══════════════════════════════════════════
+   ANALYSIS PIPELINE
+══════════════════════════════════════════ */
+async function runAnalysis() {
+  showScreen('loading');
+  await animateLoadingStep(1, 400);
+  state.scores = computeScores();
+  await animateLoadingStep(2, 500);
+  state.profile = getProfile(state.scores);
+  await animateLoadingStep(3, 500);
+  state.topForces = getTopForces(state.scores);
+  state.fitSignals = getFitSignals(state.scores);
+
+  if (getKey()) {
+    await animateLoadingStep(4, 300);
+    try { state.aiText = await callGPT(); } catch(e) { state.aiText = ''; }
+  } else {
+    document.getElementById('ls-4').textContent = ' Analyse IA désactivée (pas de clé)';
+  }
+
+  renderResults();
+  showScreen('results');
+  setTimeout(() => document.getElementById('screen-results').classList.add('revealed'), 80);
+}
+
+function animateLoadingStep(n, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      for (let i=1; i<=4; i++) {
+        const el = document.getElementById('ls-'+i);
+        if (!el) continue;
+        if (i < n) { el.classList.remove('active'); el.classList.add('done'); }
+        else if (i === n) { el.classList.add('active'); el.classList.remove('done'); }
+      }
+      resolve();
+    }, delay);
+  });
+}
+
+/* ══════════════════════════════════════════
+   GPT CALL
+══════════════════════════════════════════ */
+async function callGPT() {
+  const key = getKey();
+  const scStr = Object.entries(state.scores).map(([d,v])=>`${DIMS[d].label}: ${v}/100`).join(', ');
+  const ctx = {
+    secteur: { industrie:'industrie/production', services_b2b:'services B2B', commerce:'commerce/distribution', services_b2c:'services B2C', tech:'tech/digital', autre:'secteur ouvert' },
+    taille: { tpe:'TPE <10 salariés', pme_petite:'PME 10-49', pme_moyenne:'PME 50-200', eti:'ETI 200+' },
+    experience: { aucune:'première direction', manager:'manager expérimenté', dirigeant:'dirigeant salarié', entrepreneur:'entrepreneur/fondateur', repreneur:'déjà repreneur' },
+  };
+  // a1 peut être un tableau (multi-select)
+  const secteurRaw = state.answers.a1;
+  const secteur = Array.isArray(secteurRaw)
+    ? secteurRaw.map(v => ctx.secteur[v] || v).join(', ')
+    : (ctx.secteur[secteurRaw] || 'non précisé');
+  const taille = ctx.taille[state.answers.a2] || 'non précisée';
+  const xp = ctx.experience[state.answers.a3] || 'non précisée';
+
+  const prompt = `Tu es un expert en identification de profils de repreneurs d'entreprise et en matching dirigeant-entreprise.
+
+Profil diagnostiqué :
+- Secteur(s) visé(s) : ${secteur} | Taille visée : ${taille} | Expérience : ${xp}
+- Scores sur 6 dimensions (sur 100) : ${scStr}
+- Archétype identifié : ${state.profile.type} — "${state.profile.tagline}"
+- Forces dominantes : ${state.topForces.map(f=>f.titre).join(', ')}
+
+Ce repreneur est en phase de construction de projet. L'objectif de ce rapport est de l'aider à identifier les types d'entreprises et de contextes qui correspondent à ses talents naturels.
+
+Rédige une analyse en 3 paragraphes distincts (sans titres) qui :
+1. Décrit avec précision les 2-3 talents distinctifs de ce repreneur — ce qu'il apporte de vraiment différenciant comme dirigeant
+2. Identifie les caractéristiques des entreprises qui valoriseront le mieux son profil (secteur, culture, stade de développement, enjeux prioritaires)
+3. Formule une recommandation concrète sur le type de reprise qui maximise ses chances de réussite et de création de valeur
+
+Ne mentionne pas de plan d'action, de développement personnel ou de points à travailler. Ce rapport célèbre les forces et oriente vers le bon fit.
+Ton : expert bienveillant, regard acéré, formulations concrètes. 220 mots maximum.`;
+
+  const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({ model: 'gpt-4.1-mini', max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
+  });
+
+  if (!r.ok) { const e = await r.json().catch(()=>{}); throw new Error(e?.error?.message || 'Erreur API'); }
+  const d = await r.json();
+  return d.choices?.[0]?.message?.content || '';
+}
+
+/* ══════════════════════════════════════════
+   RENDER RESULTS
+══════════════════════════════════════════ */
+function renderResults() {
+  const sc = state.scores;
+  const p = state.profile;
+  const forces = state.topForces;
+  const fit = state.fitSignals;
+
+  const ctxLabels = {
+    a1: { industrie:'Industrie', services_b2b:'Services B2B', commerce:'Commerce', services_b2c:'Services B2C', tech:'Tech/Digital', autre:'Secteur ouvert' },
+    a2: { tpe:'TPE <10 sal.', pme_petite:'PME 10-49', pme_moyenne:'PME 50-200', eti:'ETI 200+' },
+    a3: { aucune:'1ère direction', manager:'Manager', dirigeant:'Dirigeant', entrepreneur:'Entrepreneur', repreneur:'Déjà repreneur' },
+  };
+  const secteursSelectionnes = Array.isArray(state.answers.a1)
+    ? state.answers.a1.map(v => ctxLabels.a1[v] || v).join(', ')
+    : (state.answers.a1 ? ctxLabels.a1[state.answers.a1] || '' : '');
+  const ctxItems = [
+    secteursSelectionnes ? `<div class="ctx-item"><strong>Secteur(s) visé(s) :</strong> ${secteursSelectionnes}</div>` : '',
+    state.answers.a2 ? `<div class="ctx-item"><strong>Taille cible :</strong> ${ctxLabels.a2[state.answers.a2]||''}</div>` : '',
+    state.answers.a3 ? `<div class="ctx-item"><strong>Expérience :</strong> ${ctxLabels.a3[state.answers.a3]||''}</div>` : '',
+  ].filter(Boolean).join('');
+
+  const scoreRows = Object.entries(DIMS).map(([k,d]) => `
+    <div class="score-row">
+      <div class="score-row-label">${d.label}</div>
+      <div class="score-bar"><div class="score-bar-fill" style="width:${sc[k]}%;background:${d.color}"></div></div>
+      <div class="score-num">${sc[k]}</div>
+    </div>`).join('');
+
+  // Forces cards
+  const forceCards = forces.map((f,i) => `
+    <div class="force-card">
+      <div class="force-head">
+        <div class="force-rank">0${i+1}</div>
+        <div class="force-title">${f.titre}</div>
+        <div class="force-score" style="background:${DIMS[f.dim].color}20;color:${DIMS[f.dim].color}">${f.score}</div>
+      </div>
+      <p class="force-desc">${f.desc}</p>
+    </div>`).join('');
+
+  // Profile forces (from profile data)
+  const profileForces = p.forces ? p.forces.map(f => `
+    <div class="profile-force">
+      <div class="pf-title">${f.titre}</div>
+      <div class="pf-text">${f.texte}</div>
+    </div>`).join('') : '';
+
+  // Fit signals
+  const fitPositifs = fit.positifs.map(s => `
+    <div class="fit-item fit-ok">
+      <span class="fit-icon">↗</span>
+      <span>${s}</span>
+    </div>`).join('');
+  const fitVigilances = fit.vigilances.length ? fit.vigilances.map(s => `
+    <div class="fit-item fit-watch">
+      <span class="fit-icon">→</span>
+      <span>${s}</span>
+    </div>`).join('') : '';
+
+  const aiBlock = state.aiText
+    ? `<div class="ai-text">${state.aiText.split('\n').filter(Boolean).map(par=>`<p>${par}</p>`).join('')}</div>`
+    : (getKey()
+      ? `<div class="ai-error">⚠ L'analyse IA n'a pas pu être générée. <button style="border:none;background:none;color:var(--accent);cursor:pointer;font-family:inherit;font-size:13px;text-decoration:underline" onclick="retryAI()">Réessayer</button></div>`
+      : `<div class="ai-no-key">Ajoutez votre clé OpenAI sur la page d'accueil pour accéder à l'analyse personnalisée IA.</div>`);
+
+  document.getElementById('results-wrap').innerHTML = `
+    <div class="r-hero">
+      <div class="r-eyebrow">Portrait de repreneur</div>
+      <h1 class="r-type">${p.type}</h1>
+      <p class="r-tagline">"${p.tagline}"</p>
+      <p class="r-desc">${p.desc}</p>
+    </div>
+
+    ${ctxItems ? `<div class="context-recap">${ctxItems}</div>` : ''}
+
+    <div class="r-viz">
+      <div class="r-radar-wrap"><canvas id="radar-canvas"></canvas></div>
+      <div class="r-scores">
+        <div class="r-scores-title">Intensité des 6 dimensions</div>
+        ${scoreRows}
+      </div>
+    </div>
+
+    <div class="r-section">
+      <div class="r-section-head"><div class="r-section-line"></div><span class="r-section-title">Vos 3 forces dominantes</span><div class="r-section-line"></div></div>
+      <div class="forces-grid">${forceCards}</div>
+    </div>
+
+    ${profileForces ? `
+    <div class="r-section">
+      <div class="r-section-head"><div class="r-section-line"></div><span class="r-section-title">Ce que vous apportez comme dirigeant</span><div class="r-section-line"></div></div>
+      <div class="profile-forces">${profileForces}</div>
+    </div>` : ''}
+
+    <div class="r-section">
+      <div class="r-section-head"><div class="r-section-line"></div><span class="r-section-title">Signaux de fit entreprise</span><div class="r-section-line"></div></div>
+      <div class="fit-block">
+        <div class="fit-label">Contextes qui valorisent votre profil</div>
+        ${fitPositifs}
+        ${fitVigilances ? `<div class="fit-label" style="margin-top:1rem">Points d'attention dans le matching</div>${fitVigilances}` : ''}
+        ${p.fit ? `<div class="fit-summary">${p.fit}</div>` : ''}
+      </div>
+    </div>
+
+    <div class="r-section">
+      <div class="r-section-head"><div class="r-section-line"></div><span class="r-section-title">Analyse personnalisée</span><div class="r-section-line"></div></div>
+      <div class="ai-block">${aiBlock}</div>
+    </div>
+
+    <div class="r-actions">
+      <button class="btn-pdf" onclick="generatePDF()">↓ Télécharger le rapport PDF</button>
+      <button class="btn-restart" onclick="restart()">↺ Refaire le diagnostic</button>
+    </div>
+    <div class="r-date">Diagnostic réalisé le ${new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
+  `;
+
+  setTimeout(() => {
+    document.querySelectorAll('.score-bar-fill').forEach(el => {
+      const w = el.style.width; el.style.width = '0';
+      setTimeout(() => { el.style.width = w; }, 50);
+    });
+  }, 200);
+  setTimeout(() => renderRadar(), 100);
+}
+
+function retryAI() {
+  document.querySelector('.ai-block').innerHTML = `<div class="ai-loading-msg"><div class="ai-mini-spin"></div>Génération en cours…</div>`;
+  callGPT().then(txt => {
+    state.aiText = txt;
+    document.querySelector('.ai-block').innerHTML = `<div class="ai-text">${txt.split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('')}</div>`;
+  }).catch(e => {
+    document.querySelector('.ai-block').innerHTML = `<div class="ai-error">⚠ ${e.message}</div>`;
+  });
+}
+
+function renderRadar() {
+  const canvas = document.getElementById('radar-canvas');
+  if (!canvas) return;
+  const sc = state.scores;
+  const labels = Object.values(DIMS).map(d => d.label);
+  const data = Object.keys(DIMS).map(k => sc[k] ?? 50);
+
+  new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: 'rgba(139,58,42,0.10)',
+        borderColor: '#8B3A2A',
+        borderWidth: 1.5,
+        pointBackgroundColor: '#8B3A2A',
+        pointBorderColor: '#F7F3EE',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false, stepSize: 25 },
+          grid: { color: 'rgba(28,25,23,0.08)' },
+          angleLines: { color: 'rgba(28,25,23,0.08)' },
+          pointLabels: { color: '#6B6358', font: { size: 11, family: "'Jost',sans-serif" } },
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1C1917',
+          titleColor: '#C9A84C',
+          bodyColor: '#EDE8E1',
+          padding: 10,
+          callbacks: { label: ctx => ` ${ctx.raw}/100` }
+        }
+      }
+    }
+  });
+}
+
+function restart() {
+  document.getElementById('screen-results').classList.remove('revealed');
+  showScreen('welcome');
+}
+
+/* ══════════════════════════════════════════
+   PDF GENERATION
+══════════════════════════════════════════ */
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, H = 297;
+  const ml = 20, mr = 20, mt = 24;
+
+  // Colors
+  const INK = [28, 25, 23];
+  const INK3 = [107, 99, 88];
+  const ACCENT = [139, 58, 42];
+  const IVORY2 = [237, 232, 225];
+  const WHITE = [255, 255, 255];
+
+  function px(x) { return x; }
+
+  // ── PAGE 1 ────────────────────────────────────
+  // Header band
+  doc.setFillColor(...ACCENT);
+  doc.rect(0, 0, W, 14, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...WHITE);
+  doc.text('PROFIL REPRENEUR — DIAGNOSTIC STRATÉGIQUE CONFIDENTIEL', ml, 9.5);
+  doc.text(new Date().toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'}), W - mr, 9.5, { align: 'right' });
+
+  // Profile type
+  let y = 36;
+  doc.setFontSize(9);
+  doc.setTextColor(...ACCENT);
+  doc.setFont('helvetica', 'bold');
+  doc.text('VOTRE PROFIL DE REPRENEUR', ml, y);
+
+  y += 8;
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...INK);
+  doc.text(state.profile.type, ml, y);
+
+  y += 7;
+  doc.setFontSize(11);
+  doc.setTextColor(...ACCENT);
+  doc.setFont('helvetica', 'italic');
+  doc.text('"' + state.profile.tagline + '"', ml, y);
+
+  y += 8;
+  doc.setFontSize(9.5);
+  doc.setTextColor(...INK3);
+  doc.setFont('helvetica', 'normal');
+  const descLines = doc.splitTextToSize(state.profile.desc, W - ml - mr);
+  doc.text(descLines, ml, y);
+  y += descLines.length * 5 + 8;
+
+  // Divider
+  doc.setDrawColor(...IVORY2);
+  doc.setLineWidth(0.4);
+  doc.line(ml, y, W - mr, y);
+  y += 10;
+
+  // Section header helper
+  function sectionHead(title, yy) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...ACCENT);
+    doc.text(title.toUpperCase(), ml, yy);
+    doc.setDrawColor(...IVORY2);
+    doc.setLineWidth(0.3);
+    doc.line(ml + doc.getTextWidth(title.toUpperCase()) + 4, yy - 1, W - mr, yy - 1);
+    return yy + 8;
+  }
+
+  // Scores
+  y = sectionHead('Détail des 6 dimensions', y);
+  const COLORS_PDF = { leadership:[139,58,42], motivation:[160,120,64], resilience:[74,124,89], relationnel:[59,95,138], strategique:[107,94,168], operationnel:[122,106,90] };
+
+  Object.entries(DIMS).forEach(([k, d]) => {
+    const v = state.scores[k];
+    const barW = 80;
+    const fillW = (v / 100) * barW;
+    const col = COLORS_PDF[k] || ACCENT;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...INK3);
+    doc.text(d.label, ml, y + 3.5);
+
+    doc.setFillColor(...IVORY2);
+    doc.roundedRect(70, y, barW, 3, 1, 1, 'F');
+    if (fillW > 0) {
+      doc.setFillColor(...col);
+      doc.roundedRect(70, y, fillW, 3, 1, 1, 'F');
+    }
+    doc.setFontSize(8);
+    doc.setTextColor(...INK3);
+    doc.text(v + '', 156, y + 3.5);
+    y += 8;
+  });
+
+  y += 4;
+  doc.setDrawColor(...IVORY2);
+  doc.line(ml, y, W - mr, y);
+  y += 10;
+
+  // Analyse IA
+  if (state.aiText) {
+    if (y > H - 50) { doc.addPage(); y = 24; }
+    y = sectionHead('Analyse personnalisée', y);
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...INK3);
+    const aiLines = doc.splitTextToSize(state.aiText.replace(/\n+/g, ' '), W - ml - mr);
+    if (y + aiLines.length * 4.5 > H - 20) { doc.addPage(); y = 24; }
+    doc.text(aiLines, ml, y);
+    y += aiLines.length * 4.5 + 10;
+    doc.setDrawColor(...IVORY2);
+    doc.line(ml, y, W - mr, y);
+    y += 10;
+  }
+
+  // Forces dominantes
+  if (y > H - 80) { doc.addPage(); y = 24; }
+  y = sectionHead('Vos 3 forces dominantes', y);
+
+  (state.topForces || []).forEach((f, i) => {
+    if (y > H - 50) { doc.addPage(); y = 24; }
+    const col = Object.values(COLORS_PDF)[Object.keys(DIMS).indexOf(f.dim)] || ACCENT;
+
+    doc.setFillColor(...IVORY2);
+    doc.roundedRect(ml, y - 3, W - ml - mr, 22, 2, 2, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...ACCENT);
+    doc.text('0' + (i + 1), ml + 4, y + 5);
+
+    doc.setTextColor(...col);
+    doc.text(f.titre, ml + 14, y + 5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...INK3);
+    const descLines = doc.splitTextToSize(f.desc, W - ml - mr - 14);
+    doc.text(descLines, ml + 14, y + 11);
+    y += 26;
+  });
+
+  y += 4;
+  doc.setDrawColor(...IVORY2);
+  doc.line(ml, y, W - mr, y);
+  y += 10;
+
+  // Ce que vous apportez (forces du profil)
+  if (state.profile.forces && state.profile.forces.length) {
+    if (y > H - 80) { doc.addPage(); y = 24; }
+    y = sectionHead('Ce que vous apportez comme dirigeant', y);
+
+    state.profile.forces.forEach(f => {
+      if (y > H - 40) { doc.addPage(); y = 24; }
+
+      doc.setFillColor(...ACCENT);
+      doc.rect(ml, y - 1, 2, 14, 'F');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...INK);
+      doc.text(f.titre, ml + 6, y + 4);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...INK3);
+      const tLines = doc.splitTextToSize(f.texte, W - ml - mr - 6);
+      doc.text(tLines, ml + 6, y + 10);
+      y += tLines.length * 4.5 + 10;
+    });
+
+    y += 2;
+    doc.setDrawColor(...IVORY2);
+    doc.line(ml, y, W - mr, y);
+    y += 10;
+  }
+
+  // Signaux de fit
+  if (y > H - 80) { doc.addPage(); y = 24; }
+  y = sectionHead('Signaux de fit entreprise', y);
+
+  const fit = state.fitSignals || { positifs:[], vigilances:[] };
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...INK3);
+  doc.text('CONTEXTES QUI VALORISENT VOTRE PROFIL', ml, y);
+  y += 6;
+
+  fit.positifs.forEach(s => {
+    if (y > H - 20) { doc.addPage(); y = 24; }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...INK3);
+    const sLines = doc.splitTextToSize('↗  ' + s, W - ml - mr);
+    doc.text(sLines, ml, y);
+    y += sLines.length * 5 + 2;
+  });
+
+  if (fit.vigilances && fit.vigilances.length) {
+    y += 4;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...INK3);
+    doc.text('POINTS D\'ATTENTION DANS LE MATCHING', ml, y);
+    y += 6;
+    fit.vigilances.forEach(s => {
+      if (y > H - 20) { doc.addPage(); y = 24; }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...INK3);
+      const sLines = doc.splitTextToSize('→  ' + s, W - ml - mr);
+      doc.text(sLines, ml, y);
+      y += sLines.length * 5 + 2;
+    });
+  }
+
+  if (state.profile.fit) {
+    y += 6;
+    if (y > H - 30) { doc.addPage(); y = 24; }
+    doc.setFillColor(...IVORY2);
+    const fitSummaryLines = doc.splitTextToSize(state.profile.fit, W - ml - mr - 8);
+    doc.roundedRect(ml, y - 3, W - ml - mr, fitSummaryLines.length * 5 + 10, 2, 2, 'F');
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    doc.setTextColor(...INK3);
+    doc.text(fitSummaryLines, ml + 4, y + 4);
+    y += fitSummaryLines.length * 5 + 14;
+  }
+
+  // Footer
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...IVORY2);
+    doc.rect(0, H - 10, W, 10, 'F');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...INK3);
+    doc.text('Profil Repreneur — Diagnostic confidentiel', ml, H - 4);
+    doc.text('Page ' + p + ' / ' + pages, W - mr, H - 4, { align: 'right' });
+  }
+
+  doc.save('profil-repreneur-' + Date.now() + '.pdf');
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  updateKeyUI();
+  // Allow pressing Enter to save API key
+  document.getElementById('api-key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveKey();
+  });
+});
+</script>
+</body>
+</html>
